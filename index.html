@@ -1722,9 +1722,121 @@ function showToast(msg, type='success') {
 }
 
 /* ════════════════════════════════════════════════
+   ON-LOAD FETCH — Read back from Google Sheets
+════════════════════════════════════════════════ */
+function loadFromSheet() {
+  const logBody = document.getElementById('logBody');
+  logBody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted2);padding:28px;">⏳ Loading history from Google Sheets...</td></tr>';
+
+  fetch(SCRIPT_URL)
+    .then(r => r.json())
+    .then(data => {
+      if (data.status !== 'ok') throw new Error(data.message || 'Unknown error');
+
+      // ── 1. Hydrate machine hours ──
+      if (data.machineHours) {
+        ['FL-01','TB-01'].forEach(key => {
+          const mkey = key.replace('-01','');
+          const mh   = data.machineHours[key];
+          if (mh && mh.hours && mh.hours > 0) {
+            machineHours[mkey] = {
+              hours:     mh.hours,
+              updatedAt: mh.updatedAt || '—',
+              setBy:     mh.setBy     || '—',
+            };
+          }
+        });
+      }
+
+      // ── 2. Hydrate last check per machine ──
+      if (data.lastCheck) {
+        ['FL','TB'].forEach(m => {
+          const lc = data.lastCheck[m];
+          if (lc) {
+            lastCheckRecord[m] = {
+              date:       lc.date       || null,
+              time:       lc.time       || null,
+              operator:   lc.operator   || null,
+              issueCount: lc.issueCount || 0,
+              result:     lc.issueCount > 0 ? 'issues' : 'clear',
+            };
+          }
+        });
+      }
+
+      // ── 3. Hydrate maintenance last-done dates from maint log ──
+      if (data.maintLog && data.maintLog.length) {
+        // Walk maint log (already most-recent-first) and stamp each
+        // maintData item with the first (most recent) match found
+        data.maintLog.forEach(row => {
+          const isSummer = row.task.startsWith('[SUMMER]');
+          if (isSummer) {
+            const taskName = row.task.replace('[SUMMER] ','');
+            if (!summerCheckLog[taskName]) {
+              // Parse date from timestamp
+              const d = new Date(row.timestamp);
+              const dateStr = isNaN(d) ? row.timestamp : d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+              summerCheckLog[taskName] = { date: dateStr, operator: row.operator };
+            }
+            return;
+          }
+          const machKey = row.machine.includes('Front') ? 'FL'
+                        : row.machine === 'BOTH'        ? null
+                        : 'TB';
+          const targets = machKey ? [machKey] : ['FL','TB'];
+          targets.forEach(mk => {
+            maintData[mk].forEach(item => {
+              if (item.label === row.task && !item.lastDoneDate) {
+                const d = new Date(row.timestamp);
+                item.lastDoneDate = isNaN(d) ? '' : d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+                if (row.hours && !isNaN(parseInt(row.hours))) {
+                  item.lastDoneHrs = parseInt(row.hours);
+                }
+              }
+            });
+          });
+        });
+      }
+
+      // ── 4. Populate submission log table ──
+      if (data.dailyLog && data.dailyLog.length) {
+        sessionLog = data.dailyLog; // replace session array with real history
+        logBody.innerHTML = data.dailyLog.map(r => {
+          const isFl   = r.machine.includes('Front');
+          const fail   = Number(r.fail) || 0;
+          const pass   = Number(r.pass) || 0;
+          const total  = Number(r.total_items) || (pass + fail);
+          const pct    = total > 0 ? Math.round(pass / total * 100) : 100;
+          const ts     = r.timestamp ? new Date(r.timestamp).toLocaleString('en-GB') : r.date + ' ' + r.time;
+          return `<tr>
+            <td>${ts}</td>
+            <td><span class="badge-${isFl?'fl':'tb'}">${isFl?'FL-01':'TB-01'}</span></td>
+            <td>${r.operator}</td>
+            <td><span class="${fail>0?'badge-fail':'badge-pass'}">${fail>0?'ISSUES':'PASS'}</span></td>
+            <td style="color:${fail>0?'var(--danger)':'var(--muted2)'};">${fail>0?fail+' issue(s)':'–'}</td>
+            <td>${pct}%</td>
+          </tr>`;
+        }).join('');
+      } else {
+        logBody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted2);padding:28px;">No submissions found in Google Sheets.</td></tr>';
+      }
+
+      // ── 5. Rebuild UI with hydrated data ──
+      buildMaintenanceTab();
+      refreshHoursDisplay();
+
+    })
+    .catch(err => {
+      logBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--danger);padding:28px;">⚠ Could not load history: ${err.message}</td></tr>`;
+      console.error('Load error:', err);
+    });
+}
+
+/* ════════════════════════════════════════════════
    INIT
 ════════════════════════════════════════════════ */
 buildMaintenanceTab();
+loadFromSheet();
 </script>
 </body>
 </html>
