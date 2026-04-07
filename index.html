@@ -678,15 +678,23 @@
     <div>
       <div class="hours-val fl" id="dashHoursVal">—</div>
       <div class="hours-label">Engine Hours on Machine</div>
+      <div class="hours-meta" style="margin-top:4px;">Hours updated: <strong id="dashHoursUpdated">not set</strong></div>
     </div>
     <div class="hours-divider"></div>
     <div>
-      <div class="hours-meta">Last updated: <strong id="dashHoursUpdated">not set</strong></div>
-      <div class="hours-meta">Set by: <strong id="dashHoursSetBy">—</strong></div>
+      <div class="hours-label" style="margin-bottom:6px;">Last Pre-Use Check</div>
+      <div class="hours-meta">Date: <strong id="dashLastCheckDate">never recorded</strong></div>
+      <div class="hours-meta">Time: <strong id="dashLastCheckTime">—</strong></div>
+      <div class="hours-meta">Operator: <strong id="dashLastCheckOp">—</strong></div>
     </div>
     <div class="hours-divider"></div>
-    <div style="font-size:12px;color:var(--muted);">
-      To update hours, log in as <strong style="color:var(--tech-color);">SNR TECH</strong> via the header button.
+    <div>
+      <div class="hours-label" style="margin-bottom:6px;">Last Check Result</div>
+      <div id="dashLastCheckResult" style="font-size:13px;color:var(--muted2);">—</div>
+    </div>
+    <div class="hours-divider"></div>
+    <div style="font-size:11px;color:var(--muted);">
+      Update engine hours via<br><strong style="color:var(--tech-color);">SNR TECH</strong> in the header.
     </div>
   </div>
 
@@ -938,6 +946,15 @@ let machineHours = {
   TB: { hours: null, updatedAt: null, setBy: null },
 };
 
+// Last pre-use check state per machine
+let lastCheckRecord = {
+  FL: { date: null, time: null, operator: null, result: null, issueCount: 0 },
+  TB: { date: null, time: null, operator: null, result: null, issueCount: 0 },
+};
+
+// Summer check completion tracking
+let summerCheckLog = {}; // key = task label, value = { date, operator }
+
 // Maintenance schedule (editable) — hrsInterval = engine hours, lastDoneHrs = hours at last service
 let maintData = {
   FL: [
@@ -1016,13 +1033,27 @@ function buildDashboard() {
   const mh   = machineHours[m];
   const hrs  = mh.hours;
   const data = maintData[m];
+  const lc   = lastCheckRecord[m];
 
   // hours strip
   const hv = document.getElementById('dashHoursVal');
   hv.textContent = hrs !== null ? hrs + ' hrs' : '— hrs';
   hv.className = 'hours-val ' + m.toLowerCase();
   document.getElementById('dashHoursUpdated').textContent = mh.updatedAt || 'not set';
-  document.getElementById('dashHoursSetBy').textContent   = mh.setBy     || '—';
+
+  // last pre-use check
+  document.getElementById('dashLastCheckDate').textContent = lc.date     || 'never recorded';
+  document.getElementById('dashLastCheckTime').textContent = lc.time     || '—';
+  document.getElementById('dashLastCheckOp').textContent   = lc.operator || '—';
+
+  const resultEl = document.getElementById('dashLastCheckResult');
+  if (!lc.date) {
+    resultEl.innerHTML = '<span style="color:var(--muted2);">No check submitted yet</span>';
+  } else if (lc.issueCount > 0) {
+    resultEl.innerHTML = `<span style="color:var(--danger);font-weight:700;">⚠ ${lc.issueCount} issue${lc.issueCount>1?'s':''} recorded</span>`;
+  } else {
+    resultEl.innerHTML = '<span style="color:var(--ok);font-weight:700;">✅ All clear</span>';
+  }
 
   // compute status per item
   function getItemStatus(item) {
@@ -1362,6 +1393,16 @@ function submitCheck() {
     raw_responses: JSON.stringify(allItems),
   };
   addToLog(payload);
+
+  // Record last check state for dashboard
+  const machineKey = currentMachine; // FL or TB
+  lastCheckRecord[machineKey] = {
+    date:       payload.date,
+    time:       payload.time,
+    operator:   payload.operator,
+    result:     payload.fail > 0 ? 'issues' : 'clear',
+    issueCount: payload.fail,
+  };
   if(SCRIPT_URL!=='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
     fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)})
     .then(()=>showToast('✅ Check submitted to Google Sheets!','success'))
@@ -1400,26 +1441,57 @@ function buildMaintenanceTab() {
     return 'ok';
   }
   function renderItems(items, unit) {
-    return items.map(m=>`
-    <div class="maint-item">
-      <div style="flex:1;">
-        <div class="maint-label">${m.label}</div>
-        <div class="maint-interval">🔄 Every ${m.hrsInterval} hrs${m.calInterval?' or '+m.calInterval:''}</div>
-      </div>
-      <div class="maint-status">
-        <div class="last-done">@ ${m.lastDoneHrs} hrs</div>
-        <div class="status-dot dot-${statusFromHrs(m,unit.replace('-01',''))}"></div>
-        <button class="log-btn" onclick="logMaint('${unit}','${m.label.replace(/'/g,"\\'")}')">LOG</button>
-      </div>
-    </div>`).join('');
+    const machKey = unit.replace('-01','');
+    const hrs = machineHours[machKey].hours;
+    return items.map(m => {
+      const st = statusFromHrs(m, machKey);
+      const remaining = hrs !== null ? (m.lastDoneHrs + m.hrsInterval) - hrs : null;
+      const remainTxt = remaining === null ? ''
+        : remaining <= 0
+          ? `<span style="color:var(--danger);font-size:11px;font-weight:700;">${Math.abs(remaining)} hrs overdue</span>`
+          : `<span style="color:${st==='warn'?'var(--warn)':'var(--muted2)'};font-size:11px;">${remaining} hrs remaining</span>`;
+      const dateTxt = m.lastDoneDate
+        ? `<div style="font-size:10px;color:var(--muted2);">Done: ${m.lastDoneDate}</div>`
+        : '';
+      return `
+      <div class="maint-item">
+        <div style="flex:1;">
+          <div class="maint-label">${m.label}</div>
+          <div class="maint-interval">🔄 Every ${m.hrsInterval} hrs${m.calInterval?' or '+m.calInterval:''}</div>
+          <div style="display:flex;gap:10px;align-items:center;margin-top:3px;">
+            <span style="font-size:11px;color:var(--muted2);">Last service: ${m.lastDoneHrs} hrs</span>
+            ${remainTxt}
+          </div>
+          ${dateTxt}
+        </div>
+        <div class="maint-status">
+          <div class="status-dot dot-${st}"></div>
+          <button class="log-btn" onclick="logMaint('${unit}','${m.label.replace(/'/g,"\\'")}')">LOG</button>
+        </div>
+      </div>`;
+    }).join('');
   }
   document.getElementById('maintFL').innerHTML = renderItems(maintData.FL,'FL-01');
   document.getElementById('maintTB').innerHTML = renderItems(maintData.TB,'TB-01');
-  document.getElementById('summerChecks').innerHTML = SUMMER_CHECKS.map(c=>`
+
+  document.getElementById('summerChecks').innerHTML = SUMMER_CHECKS.map(c => {
+    const logged = summerCheckLog[c.label];
+    const doneBadge = logged
+      ? `<span style="font-size:11px;color:var(--ok);font-weight:600;">✅ ${logged.date} — ${logged.operator}</span>`
+      : `<span style="font-size:11px;color:var(--muted2);">Not yet completed</span>`;
+    return `
     <div class="maint-item">
-      <div style="flex:1;"><div class="maint-label">${c.label}</div><div class="maint-interval">📍 ${c.note}</div></div>
-      <div class="maint-status"><button class="log-btn" onclick="logMaint('BOTH','${c.label.replace(/'/g,"\\'")}')">LOG COMPLETE</button></div>
-    </div>`).join('');
+      <div style="flex:1;">
+        <div class="maint-label">${c.label}</div>
+        <div class="maint-interval">📍 ${c.note}</div>
+        <div style="margin-top:3px;">${doneBadge}</div>
+      </div>
+      <div class="maint-status">
+        <div class="status-dot ${logged?'dot-ok':'dot-warn'}"></div>
+        <button class="log-btn" onclick="logSummer('${c.label.replace(/'/g,"\\'")}')">LOG COMPLETE</button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function logMaint(unit, task) {
@@ -1427,13 +1499,45 @@ function logMaint(unit, task) {
   if(!op) return;
   const hrs   = prompt('Hour meter reading at time of service:') || '';
   const notes = prompt('Notes / parts used / supplier:') || '';
+  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+
+  // Update lastDoneHrs and lastDoneDate in maintData
+  ['FL','TB'].forEach(machKey => {
+    if(unit === machKey+'-01' || unit === 'BOTH') {
+      maintData[machKey].forEach(item => {
+        if(item.label === task) {
+          if(hrs) item.lastDoneHrs = parseInt(hrs) || item.lastDoneHrs;
+          item.lastDoneDate = today;
+        }
+      });
+    }
+  });
+
   const payload = { timestamp:new Date().toISOString(), type:'MAINTENANCE', machine:unit, task, operator:op, hours:hrs, notes };
   if(SCRIPT_URL!=='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
     fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)})
-    .then(()=>showToast('✅ Maintenance logged.','success'))
+    .then(()=>{ buildMaintenanceTab(); buildDashboard(); showToast('✅ Maintenance logged.','success'); })
     .catch(()=>showToast('⚠ Log failed.','error'));
   } else {
+    buildMaintenanceTab(); buildDashboard();
     showToast(`✅ ${task} logged for ${unit}.`,'success');
+  }
+}
+
+function logSummer(task) {
+  const op = prompt(`Log summer inspection complete:\n${task}\n\nTechnician name:`);
+  if(!op) return;
+  const notes = prompt('Notes / observations:') || '';
+  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  summerCheckLog[task] = { date: today, operator: op };
+  const payload = { timestamp:new Date().toISOString(), type:'MAINTENANCE', machine:'BOTH', task:'[SUMMER] '+task, operator:op, hours:'', notes };
+  if(SCRIPT_URL!=='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+    fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)})
+    .then(()=>{ buildMaintenanceTab(); showToast('✅ Summer inspection logged.','success'); })
+    .catch(()=>showToast('⚠ Log failed.','error'));
+  } else {
+    buildMaintenanceTab();
+    showToast(`✅ Summer: ${task} logged.`,'success');
   }
 }
 
