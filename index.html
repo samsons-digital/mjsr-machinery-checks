@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MJSR Heavy Machinery — Daily Checks & Maintenance</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg:        #f4f5f7;
+    --surface:   #ffffff;
+    --card:      #ffffff;
+    --card2:     #f9fafb;
+    --border:    #e2e5ea;
+    --border2:   #d0d4dc;
+    --accent:    #d4620a;
+    --accent2:   #e8821a;
+    --accent-lt: #fff4ec;
+    --danger:    #c0392b;
+    --danger-lt: #fff0ef;
+    --ok:        #1e8a4a;
+    --ok-lt:     #edf7f1;
+    --warn:      #b8860b;
+    --warn-lt:   #fffbec;
+    --text:      #1a1d23;
+    --text2:     #3d4250;
+    --muted:     #7a8090;
+    --muted2:    #a0a8b5;
+    --fl-color:  #d4620a;
+    --tb-color:  #1a6fba;
+    --tech-color:#5c3d99;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: #1a1d23;
+    border-bottom: 3px solid var(--accent);
+    padding: 0 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 58px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-brand { display: flex; align-items: center; gap: 12px; }
+  .header-logo {
+    width: 36px; height: 36px; background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800; font-size: 15px; color: #fff;
+    clip-path: polygon(10% 0%,90% 0%,100% 50%,90% 100%,10% 100%,0% 50%);
+  }
+  .header-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 18px; letter-spacing: 1px; color: #fff;
+  }
+  .header-sub { font-size: 11px; color: #6b7280; letter-spacing: 0.5px; }
+  .header-right { display: flex; align-items: center; gap: 14px; }
+  .header-date { font-size: 11px; color: #6b7280; text-align: right; }
+  .tech-login-btn {
+    padding: 6px 14px; border-radius: 4px;
+    background: rgba(92,61,153,0.85); border: 1px solid rgba(92,61,153,0.6);
+    color: #e8d8ff; font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 12px; letter-spacing: 0.5px;
+    cursor: pointer; transition: all 0.2s; text-transform: uppercase;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .tech-login-btn:hover { background: var(--tech-color); }
+  .tech-badge {
+    padding: 4px 10px; border-radius: 4px;
+    background: rgba(92,61,153,0.15); border: 1px solid rgba(92,61,153,0.3);
+    color: var(--tech-color); font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 11px; letter-spacing: 0.5px;
+    display: none;
+  }
+
+  /* ── NAV TABS ── */
+  .nav-tabs {
+    display: flex; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px; gap: 2px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    position: sticky; top: 58px; z-index: 99;
+  }
+  .nav-tab {
+    padding: 11px 18px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600; font-size: 13px; letter-spacing: 0.5px;
+    color: var(--muted); cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s; text-transform: uppercase; white-space: nowrap;
+  }
+  .nav-tab:hover { color: var(--text); }
+  .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ── MAIN ── */
+  .main { padding: 20px; max-width: 980px; margin: 0 auto; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ── SECTION TITLE ROW ── */
+  .page-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 22px; margin-bottom: 4px;
+  }
+  .page-sub { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+
+  /* ══════════════════════════════════════════════
+     DASHBOARD STYLES
+  ══════════════════════════════════════════════ */
+  .dash-machine-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+  .dmtab {
+    padding: 8px 20px; border-radius: 6px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 13px; letter-spacing: 0.5px;
+    cursor: pointer; border: 2px solid var(--border);
+    background: var(--card); color: var(--muted);
+    transition: all 0.2s; text-transform: uppercase;
+  }
+  .dmtab.active.fl { border-color: var(--fl-color); background: #fff5ef; color: var(--fl-color); }
+  .dmtab.active.tb { border-color: var(--tb-color); background: #eef5ff; color: var(--tb-color); }
+
+  .hours-strip {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px 20px; margin-bottom: 20px;
+    display: flex; align-items: center; gap: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .hours-val {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800; font-size: 36px; line-height: 1;
+  }
+  .hours-val.fl { color: var(--fl-color); }
+  .hours-val.tb { color: var(--tb-color); }
+  .hours-label { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+  .hours-divider { width: 1px; height: 40px; background: var(--border); }
+  .hours-meta { font-size: 12px; color: var(--muted2); }
+  .hours-meta strong { color: var(--text2); }
+
+  /* ALERT PANELS */
+  .alert-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .alert-card {
+    background: var(--card); border-radius: 8px; padding: 16px;
+    border-left: 4px solid; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .alert-card.due   { border-color: var(--danger); background: var(--danger-lt); }
+  .alert-card.warn  { border-color: var(--warn);   background: var(--warn-lt); }
+  .alert-card.ok    { border-color: var(--ok);     background: var(--ok-lt); }
+  .alert-count {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800; font-size: 32px; line-height: 1;
+  }
+  .alert-card.due  .alert-count { color: var(--danger); }
+  .alert-card.warn .alert-count { color: var(--warn); }
+  .alert-card.ok   .alert-count { color: var(--ok); }
+  .alert-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .alert-desc  { font-size: 11px; color: var(--muted2); }
+
+  /* MAINTENANCE DUE TABLE */
+  .dash-table-wrap {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+  }
+  .dash-table-header {
+    padding: 12px 18px; background: var(--card2);
+    border-bottom: 1px solid var(--border);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 14px; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--text2);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .dash-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .dash-table th {
+    padding: 9px 14px; text-align: left;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600; font-size: 11px; letter-spacing: 0.5px;
+    color: var(--muted); text-transform: uppercase;
+    background: var(--card2); border-bottom: 1px solid var(--border);
+  }
+  .dash-table td {
+    padding: 10px 14px; border-bottom: 1px solid #f0f2f5;
+    vertical-align: middle;
+  }
+  .dash-table tr:last-child td { border-bottom: none; }
+  .dash-table tr:hover td { background: #fafbfc; }
+
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+  .pill-due  { background: var(--danger-lt); color: var(--danger); border: 1px solid rgba(192,57,43,0.2); }
+  .pill-warn { background: var(--warn-lt);   color: var(--warn);   border: 1px solid rgba(184,134,11,0.2); }
+  .pill-ok   { background: var(--ok-lt);     color: var(--ok);     border: 1px solid rgba(30,138,74,0.2); }
+  .pill-dot  { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  .hrs-bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .hrs-bar { flex: 1; height: 6px; background: #e8eaed; border-radius: 3px; overflow: hidden; min-width: 60px; }
+  .hrs-fill { height: 100%; border-radius: 3px; }
+  .fill-ok   { background: var(--ok); }
+  .fill-warn { background: #e8a020; }
+  .fill-due  { background: var(--danger); }
+  .hrs-text  { font-size: 11px; color: var(--muted); min-width: 50px; text-align: right; }
+
+  /* ══════════════════════════════════════════════
+     DAILY CHECK STYLES
+  ══════════════════════════════════════════════ */
+  .machine-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .machine-card {
+    background: var(--card); border: 2px solid var(--border);
+    border-radius: 8px; padding: 20px; cursor: pointer;
+    transition: all 0.2s; position: relative; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .machine-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0;
+    height: 4px; transition: opacity 0.2s; opacity: 0;
+  }
+  .machine-card.fl::before { background: var(--fl-color); }
+  .machine-card.tb::before { background: var(--tb-color); }
+  .machine-card:hover { border-color: var(--border2); box-shadow: 0 3px 8px rgba(0,0,0,0.08); }
+  .machine-card.selected.fl { border-color: var(--fl-color); }
+  .machine-card.selected.fl::before { opacity: 1; }
+  .machine-card.selected.tb { border-color: var(--tb-color); }
+  .machine-card.selected.tb::before { opacity: 1; }
+  .machine-icon { font-size: 30px; margin-bottom: 10px; }
+  .machine-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 17px; letter-spacing: 0.5px; margin-bottom: 4px;
+  }
+  .machine-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .machine-id {
+    font-size: 11px; font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600; letter-spacing: 1px; margin-top: 8px; color: var(--muted2);
+  }
+  .machine-card.selected.fl .machine-name { color: var(--fl-color); }
+  .machine-card.selected.tb .machine-name { color: var(--tb-color); }
+
+  .form-meta {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px; margin-bottom: 20px;
+  }
+  .field-group label {
+    display: block; font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 5px;
+  }
+  .field-group input, .field-group select, .field-group textarea {
+    width: 100%; background: #fff; border: 1px solid var(--border2);
+    color: var(--text); padding: 8px 11px; border-radius: 5px;
+    font-family: 'Barlow', sans-serif; font-size: 13px;
+    transition: border-color 0.2s;
+  }
+  .field-group input:focus, .field-group select:focus, .field-group textarea:focus {
+    outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(212,98,10,0.1);
+  }
+
+  /* CHECK SECTIONS */
+  .check-section {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; margin-bottom: 12px; overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; background: var(--card2);
+    border-bottom: 1px solid var(--border);
+    cursor: pointer; user-select: none;
+  }
+  .section-title-wrap { display: flex; align-items: center; gap: 8px; }
+  .section-icon { font-size: 16px; }
+  .section-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 14px; letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .section-badge {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.5px;
+    padding: 2px 7px; border-radius: 20px;
+    background: var(--border); color: var(--muted2);
+  }
+  .section-progress { display: flex; align-items: center; gap: 8px; }
+  .progress-bar { width: 70px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--ok); border-radius: 2px; transition: width 0.3s; }
+  .progress-text { font-size: 11px; color: var(--muted); min-width: 32px; text-align: right; }
+  .chevron { font-size: 11px; color: var(--muted2); transition: transform 0.2s; }
+  .check-section.collapsed .chevron { transform: rotate(-90deg); }
+  .check-section.collapsed .section-body { display: none; }
+
+  .check-item {
+    display: grid; grid-template-columns: 1fr auto auto;
+    align-items: start; gap: 10px; padding: 11px 16px;
+    border-bottom: 1px solid #f3f4f6;
+    transition: background 0.15s;
+  }
+  .check-item:last-child { border-bottom: none; }
+  .check-item:hover { background: #fafbfc; }
+  .check-item.has-issue { background: #fff8f7; }
+
+  .item-label { font-size: 13px; line-height: 1.5; }
+  .item-label strong { font-weight: 600; display: block; margin-bottom: 2px; color: var(--text); }
+  .item-hint { font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+  .yn-buttons { display: flex; gap: 5px; flex-shrink: 0; }
+  .yn-btn {
+    padding: 5px 12px; border-radius: 4px;
+    border: 1px solid var(--border2); background: #fff;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 12px; letter-spacing: 0.3px;
+    cursor: pointer; transition: all 0.15s; color: var(--muted);
+  }
+  .yn-btn.yes { border-color: #b8dfc7; }
+  .yn-btn.yes:hover { background: var(--ok-lt); color: var(--ok); }
+  .yn-btn.yes.active { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .yn-btn.no  { border-color: #f5c4bf; }
+  .yn-btn.no:hover  { background: var(--danger-lt); color: var(--danger); }
+  .yn-btn.no.active  { background: var(--danger); border-color: var(--danger); color: #fff; }
+  .yn-btn.na  { }
+  .yn-btn.na.active  { background: var(--muted2); border-color: var(--muted2); color: #fff; }
+
+  .item-note { grid-column: 1 / -1; display: none; margin-top: 5px; }
+  .item-note.visible { display: block; }
+  .item-note input {
+    width: 100%; background: #fff8f7; border: 1px solid #f5c4bf;
+    color: var(--text); padding: 7px 10px; border-radius: 4px;
+    font-family: 'Barlow', sans-serif; font-size: 12px;
+  }
+  .item-note input::placeholder { color: var(--muted2); }
+
+  .reading-input { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .reading-input input {
+    width: 72px; background: #fff; border: 1px solid var(--border2);
+    color: var(--text); padding: 5px 7px; border-radius: 4px;
+    font-family: 'Barlow', sans-serif; font-size: 12px; text-align: center;
+  }
+  .reading-unit { font-size: 10px; color: var(--muted2); }
+
+  .severity {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.3px;
+    padding: 2px 5px; border-radius: 3px; text-transform: uppercase;
+    flex-shrink: 0; display: inline-block; margin-bottom: 3px;
+  }
+  .sev-critical { background: #fde8e8; color: #b91c1c; border: 1px solid #fca5a5; }
+  .sev-high     { background: #fff0e0; color: #c2500a; border: 1px solid #fdba74; }
+  .sev-medium   { background: #fefce8; color: #a16207; border: 1px solid #fde047; }
+
+  /* SUMMARY BANNER */
+  .summary-banner {
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 18px; margin-bottom: 16px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .summary-stat { text-align: center; }
+  .stat-val { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 26px; }
+  .stat-label { font-size: 10px; color: var(--muted); margin-top: 1px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+  .stat-ok   { color: var(--ok); }
+  .stat-fail { color: var(--danger); }
+  .stat-pend { color: var(--muted2); }
+  .summary-divider { width: 1px; height: 44px; background: var(--border); }
+
+  /* SUBMIT */
+  .submit-section {
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 18px; margin-top: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .submit-section h3 {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px;
+    letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 12px;
+  }
+  .submit-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .submit-btn {
+    width: 100%; padding: 13px; background: var(--accent); border: none;
+    border-radius: 6px; color: #fff; font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 16px; letter-spacing: 1px;
+    cursor: pointer; transition: all 0.2s; text-transform: uppercase;
+  }
+  .submit-btn:hover { background: var(--accent2); }
+
+  .machine-note {
+    background: #fff; border: 1px dashed var(--border2); border-radius: 6px;
+    padding: 16px 18px; font-size: 13px; color: var(--muted); text-align: center;
+    margin: 16px 0; display: none;
+  }
+  .machine-note.show { display: block; }
+
+  /* ══════════════════════════════════════════════
+     MAINTENANCE SCHEDULE STYLES
+  ══════════════════════════════════════════════ */
+  .maint-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .maint-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 0; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .maint-card-header {
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    background: var(--card2);
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+    font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .maint-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; border-bottom: 1px solid #f3f4f6; gap: 10px;
+  }
+  .maint-item:last-child { border-bottom: none; }
+  .maint-label { font-size: 13px; font-weight: 500; }
+  .maint-interval { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .maint-status { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .last-done { font-size: 11px; color: var(--muted2); }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot-ok   { background: var(--ok); }
+  .dot-warn { background: #e8a020; }
+  .dot-due  { background: var(--danger); }
+
+  .log-btn {
+    padding: 4px 10px; border-radius: 4px;
+    background: transparent; border: 1px solid var(--accent);
+    color: var(--accent); font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 11px; letter-spacing: 0.3px;
+    cursor: pointer; transition: all 0.15s; text-transform: uppercase;
+  }
+  .log-btn:hover { background: var(--accent); color: #fff; }
+
+  /* ══════════════════════════════════════════════
+     LOG TAB
+  ══════════════════════════════════════════════ */
+  .log-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .log-table th {
+    background: var(--card2); padding: 8px 12px; text-align: left;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 11px;
+    letter-spacing: 0.5px; color: var(--muted); text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .log-table td { padding: 9px 12px; border-bottom: 1px solid #f3f4f6; color: var(--text2); }
+  .log-table tr:hover td { background: #fafbfc; }
+  .badge-pass { background: var(--ok-lt); color: var(--ok); padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 700; }
+  .badge-fail { background: var(--danger-lt); color: var(--danger); padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 700; }
+  .badge-fl   { background: #fff4ec; color: var(--fl-color); padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 700; }
+  .badge-tb   { background: #eef5ff; color: var(--tb-color); padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 700; }
+
+  /* ══════════════════════════════════════════════
+     SNR TECH MODAL
+  ══════════════════════════════════════════════ */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(10,12,18,0.55);
+    z-index: 500; display: flex; align-items: center; justify-content: center;
+    display: none;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #fff; border-radius: 10px; width: 680px; max-width: 96vw;
+    max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    border-top: 4px solid var(--tech-color);
+  }
+  .modal-header {
+    padding: 18px 22px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    background: #f8f7ff;
+  }
+  .modal-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 17px; letter-spacing: 0.5px;
+    color: var(--tech-color); text-transform: uppercase;
+  }
+  .modal-close {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--border); border: none; cursor: pointer;
+    font-size: 14px; color: var(--muted); display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+  }
+  .modal-close:hover { background: var(--border2); }
+  .modal-body { padding: 20px 22px; }
+
+  /* LOGIN SCREEN */
+  .login-screen { display: block; }
+  .tech-panel   { display: none; }
+
+  .login-form { max-width: 320px; margin: 0 auto; text-align: center; padding: 20px 0; }
+  .login-form .login-icon { font-size: 40px; margin-bottom: 14px; }
+  .login-form h3 {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 18px;
+    color: var(--tech-color); margin-bottom: 6px; text-transform: uppercase;
+  }
+  .login-form p { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+  .pin-display {
+    display: flex; gap: 8px; justify-content: center; margin-bottom: 20px;
+  }
+  .pin-dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 2px solid var(--tech-color); background: transparent;
+    transition: background 0.15s;
+  }
+  .pin-dot.filled { background: var(--tech-color); }
+  .pin-pad {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    max-width: 220px; margin: 0 auto;
+  }
+  .pin-key {
+    padding: 13px; border: 1px solid var(--border2); border-radius: 8px;
+    background: #fff; font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 18px; cursor: pointer;
+    transition: all 0.15s; color: var(--text);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pin-key:hover { background: #f8f7ff; border-color: var(--tech-color); color: var(--tech-color); }
+  .pin-key.del  { font-size: 14px; color: var(--muted); }
+  .pin-error { color: var(--danger); font-size: 12px; margin-top: 10px; min-height: 18px; }
+
+  /* TECH PANEL TABS */
+  .tech-tabs { display: flex; gap: 4px; margin-bottom: 18px; border-bottom: 1px solid var(--border); }
+  .tech-tab {
+    padding: 8px 16px; font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600; font-size: 13px; letter-spacing: 0.3px;
+    color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent;
+    text-transform: uppercase; transition: all 0.15s;
+  }
+  .tech-tab:hover { color: var(--text); }
+  .tech-tab.active { color: var(--tech-color); border-bottom-color: var(--tech-color); }
+  .tech-tab-content { display: none; }
+  .tech-tab-content.active { display: block; }
+
+  /* HOURS EDITOR */
+  .hours-editor { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .hours-editor-card {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px;
+  }
+  .hours-editor-card h4 {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+    font-size: 14px; text-transform: uppercase; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .h4-fl { color: var(--fl-color); }
+  .h4-tb { color: var(--tb-color); }
+  .current-hours-display {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 800;
+    font-size: 28px; margin-bottom: 10px;
+  }
+  .set-hours-row { display: flex; gap: 8px; align-items: center; }
+  .set-hours-row input {
+    flex: 1; background: #fff; border: 1px solid var(--border2);
+    color: var(--text); padding: 8px 10px; border-radius: 5px;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 15px;
+  }
+  .set-btn {
+    padding: 8px 14px; border-radius: 5px;
+    background: var(--tech-color); border: none; color: #fff;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+    font-size: 13px; cursor: pointer; white-space: nowrap;
+  }
+  .set-btn:hover { opacity: 0.9; }
+  .hours-note { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+  /* SCHEDULE EDITOR */
+  .sched-machine-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+  .smt {
+    padding: 6px 14px; border-radius: 4px; border: 1px solid var(--border);
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+    font-size: 12px; text-transform: uppercase; cursor: pointer; color: var(--muted);
+    background: #fff; transition: all 0.15s;
+  }
+  .smt.active { border-color: var(--tech-color); color: var(--tech-color); background: #f8f7ff; }
+
+  .sched-edit-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .sched-edit-table th {
+    padding: 7px 10px; text-align: left;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 11px;
+    letter-spacing: 0.3px; color: var(--muted); text-transform: uppercase;
+    background: var(--bg); border-bottom: 1px solid var(--border);
+  }
+  .sched-edit-table td { padding: 8px 10px; border-bottom: 1px solid #f3f4f6; }
+  .sched-edit-table input, .sched-edit-table select {
+    width: 100%; background: #fff; border: 1px solid var(--border2);
+    color: var(--text); padding: 5px 7px; border-radius: 4px;
+    font-family: 'Barlow', sans-serif; font-size: 12px;
+  }
+  .sched-edit-table input:focus, .sched-edit-table select:focus {
+    outline: none; border-color: var(--tech-color);
+  }
+  .del-row-btn {
+    padding: 3px 8px; background: transparent; border: 1px solid #fca5a5;
+    color: var(--danger); border-radius: 3px; font-size: 11px; cursor: pointer;
+  }
+  .del-row-btn:hover { background: var(--danger-lt); }
+  .add-row-btn {
+    padding: 7px 14px; margin-top: 10px; border-radius: 5px;
+    background: transparent; border: 1px solid var(--tech-color);
+    color: var(--tech-color); font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 12px; cursor: pointer;
+  }
+  .add-row-btn:hover { background: #f8f7ff; }
+  .save-sched-btn {
+    padding: 10px 22px; margin-top: 14px; border-radius: 6px;
+    background: var(--tech-color); border: none; color: #fff;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+    font-size: 14px; cursor: pointer; letter-spacing: 0.5px;
+  }
+  .save-sched-btn:hover { opacity: 0.9; }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 20px; right: 20px;
+    padding: 12px 18px; border-radius: 7px;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 14px;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 1000;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  }
+  .toast.show { opacity: 1; }
+  .toast.success { background: var(--ok); color: #fff; }
+  .toast.error   { background: var(--danger); color: #fff; }
+
+  @media(max-width:640px) {
+    .machine-selector { grid-template-columns: 1fr; }
+    .form-meta { grid-template-columns: 1fr 1fr; }
+    .maint-grid { grid-template-columns: 1fr; }
+    .submit-grid { grid-template-columns: 1fr 1fr; }
+    .alert-grid { grid-template-columns: 1fr; }
+    .hours-editor { grid-template-columns: 1fr; }
+    .dash-machine-tabs { flex-wrap: wrap; }
+    .nav-tabs { overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-brand">
+    <div class="header-logo">MJ</div>
+    <div>
+      <div class="header-title">Heavy Machinery — Checks &amp; Maintenance</div>
+      <div class="header-sub">Malam Jabba Ski Resort · Samsons Group of Companies</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="header-date" id="hdrDate"></div>
+    <div class="tech-badge" id="techBadge">🔧 SNR TECH</div>
+    <button class="tech-login-btn" id="techLoginBtn" onclick="openTechModal()">🔧 SNR TECH</button>
+  </div>
+</div>
+
+<!-- NAV TABS -->
+<div class="nav-tabs">
+  <div class="nav-tab active" onclick="switchTab('daily',this)">📋 Daily Pre-Use Check</div>
+  <div class="nav-tab" onclick="switchTab('dashboard',this)">📊 Dashboard</div>
+  <div class="nav-tab" onclick="switchTab('maintenance',this)">🔧 Maintenance Schedule</div>
+  <div class="nav-tab" onclick="switchTab('log',this)">📁 Submission Log</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ DASHBOARD TAB -->
+<div class="tab-content" id="tab-dashboard">
+<div class="main">
+  <div class="page-title">Maintenance Status Dashboard</div>
+  <div class="page-sub">Live status based on current machine hours. Red = overdue, Amber = due within 10% of interval.</div>
+
+  <!-- MACHINE SELECTOR -->
+  <div class="dash-machine-tabs">
+    <div class="dmtab fl active" id="dmt-FL" onclick="switchDashMachine('FL')">🚜 Front Loader — FL-01</div>
+    <div class="dmtab tb" id="dmt-TB" onclick="switchDashMachine('TB')">🚜 Tractor / Snow Blower — TB-01</div>
+  </div>
+
+  <!-- HOURS STRIP -->
+  <div class="hours-strip" id="dashHoursStrip">
+    <div>
+      <div class="hours-val fl" id="dashHoursVal">—</div>
+      <div class="hours-label">Engine Hours on Machine</div>
+    </div>
+    <div class="hours-divider"></div>
+    <div>
+      <div class="hours-meta">Last updated: <strong id="dashHoursUpdated">not set</strong></div>
+      <div class="hours-meta">Set by: <strong id="dashHoursSetBy">—</strong></div>
+    </div>
+    <div class="hours-divider"></div>
+    <div style="font-size:12px;color:var(--muted);">
+      To update hours, log in as <strong style="color:var(--tech-color);">SNR TECH</strong> via the header button.
+    </div>
+  </div>
+
+  <!-- ALERT SUMMARY CARDS -->
+  <div class="alert-grid" id="dashAlertGrid"></div>
+
+  <!-- OVERDUE / DUE SOON TABLE -->
+  <div class="dash-table-wrap">
+    <div class="dash-table-header" id="dashTableTitle">🔴 Overdue &amp; Upcoming Tasks</div>
+    <table class="dash-table">
+      <thead>
+        <tr>
+          <th>Maintenance Task</th>
+          <th>Interval</th>
+          <th>Last Done (Hrs)</th>
+          <th>Due At (Hrs)</th>
+          <th>Progress</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="dashTableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- ALL ITEMS TABLE -->
+  <div class="dash-table-wrap">
+    <div class="dash-table-header">📋 Full Schedule — All Items</div>
+    <table class="dash-table">
+      <thead>
+        <tr>
+          <th>Maintenance Task</th>
+          <th>Interval</th>
+          <th>Last Done (Hrs)</th>
+          <th>Due At (Hrs)</th>
+          <th>Progress</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="dashAllBody"></tbody>
+    </table>
+  </div>
+
+</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ DAILY TAB -->
+<div class="tab-content active" id="tab-daily">
+<div class="main">
+  <div class="page-title">Daily Pre-Use Check</div>
+  <div class="page-sub">Complete before every operational shift. Both operators must confirm sign-off.</div>
+
+  <div class="machine-selector">
+    <div class="machine-card fl" id="card-FL" onclick="selectMachine('FL')">
+      <div class="machine-icon">🚜</div>
+      <div class="machine-name">Front Loader</div>
+      <div class="machine-desc">Refurbished front loader with custom directional snow-clearing blade. Custom operator cabin with heating, lights &amp; wiper.</div>
+      <div class="machine-id">UNIT ID: MJSR-FL-01</div>
+    </div>
+    <div class="machine-card tb" id="card-TB" onclick="selectMachine('TB')">
+      <div class="machine-icon">🚜</div>
+      <div class="machine-name">Tractor / Snow Blower</div>
+      <div class="machine-desc">Tractor with rear-mounted PTO snow blower. Custom operator cabin with heating, lights &amp; wiper.</div>
+      <div class="machine-id">UNIT ID: MJSR-TB-01</div>
+    </div>
+  </div>
+
+  <div class="machine-note show" id="machineNote">👆 Select a machine above to begin the daily pre-use check.</div>
+
+  <div class="form-meta" id="formMeta" style="display:none;">
+    <div class="field-group"><label>Operator Name</label><input type="text" id="fOperator" placeholder="Full name"></div>
+    <div class="field-group"><label>Check Date</label><input type="date" id="fDate"></div>
+    <div class="field-group"><label>Check Time</label><input type="time" id="fTime"></div>
+    <div class="field-group"><label>Shift</label>
+      <select id="fShift"><option value="">-- Select --</option><option>Morning</option><option>Afternoon</option><option>Full Day</option></select>
+    </div>
+    <div class="field-group"><label>Weather Conditions</label>
+      <select id="fWeather"><option value="">-- Select --</option><option>Clear</option><option>Light Snow</option><option>Heavy Snow</option><option>Blizzard</option><option>Ice / Freeze</option><option>Overcast</option></select>
+    </div>
+    <div class="field-group"><label>Temperature (°C)</label><input type="number" id="fTemp" placeholder="-5"></div>
+  </div>
+
+  <div class="summary-banner" id="summaryBanner" style="display:none;">
+    <div class="summary-stat"><div class="stat-val stat-ok" id="sOk">0</div><div class="stat-label">Pass</div></div>
+    <div class="summary-divider"></div>
+    <div class="summary-stat"><div class="stat-val stat-fail" id="sFail">0</div><div class="stat-label">Issues</div></div>
+    <div class="summary-divider"></div>
+    <div class="summary-stat"><div class="stat-val stat-pend" id="sPend">–</div><div class="stat-label">Pending</div></div>
+    <div class="summary-divider"></div>
+    <div class="summary-stat"><div class="stat-val" id="sPct" style="color:var(--muted2);">0%</div><div class="stat-label">Complete</div></div>
+  </div>
+
+  <div id="checklistArea"></div>
+</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ MAINTENANCE TAB -->
+<div class="tab-content" id="tab-maintenance">
+<div class="main">
+  <div class="page-title">Maintenance Schedule</div>
+  <div class="page-sub">Interval-based service tracking. Log completed work to update records. Edit schedule via SNR TECH login.</div>
+  <div class="maint-grid">
+    <div class="maint-card">
+      <div class="maint-card-header"><span style="color:var(--fl-color);">■</span> Front Loader — FL-01</div>
+      <div id="maintFL"></div>
+    </div>
+    <div class="maint-card">
+      <div class="maint-card-header"><span style="color:var(--tb-color);">■</span> Tractor / Snow Blower — TB-01</div>
+      <div id="maintTB"></div>
+    </div>
+  </div>
+  <div class="maint-card" style="margin-top:16px;">
+    <div class="maint-card-header">☀️ Summer Deep Inspection — Both Units</div>
+    <div id="summerChecks"></div>
+  </div>
+</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ LOG TAB -->
+<div class="tab-content" id="tab-log">
+<div class="main">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+    <div><div class="page-title">Submission Log</div><div class="page-sub">Session submissions. Full history stored in Google Sheets backend.</div></div>
+    <button class="log-btn" onclick="clearLog()" style="margin-top:6px;">Clear Session</button>
+  </div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+    <table class="log-table">
+      <thead><tr><th>Date/Time</th><th>Machine</th><th>Operator</th><th>Result</th><th>Issues</th><th>Complete</th></tr></thead>
+      <tbody id="logBody"><tr><td colspan="6" style="text-align:center;color:var(--muted2);padding:28px;">No submissions this session.</td></tr></tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ SNR TECH MODAL -->
+<div class="modal-overlay" id="techModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🔧 SNR Tech Access</div>
+      <button class="modal-close" onclick="closeTechModal()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- LOGIN SCREEN -->
+      <div class="login-screen" id="loginScreen">
+        <div class="login-form">
+          <div class="login-icon">🔐</div>
+          <h3>Senior Technician Login</h3>
+          <p>Enter your 4-digit PIN to access machine hours and schedule editor.</p>
+          <div class="pin-display">
+            <div class="pin-dot" id="pd0"></div>
+            <div class="pin-dot" id="pd1"></div>
+            <div class="pin-dot" id="pd2"></div>
+            <div class="pin-dot" id="pd3"></div>
+          </div>
+          <div class="pin-pad">
+            <button class="pin-key" onclick="pinKey('1')">1</button>
+            <button class="pin-key" onclick="pinKey('2')">2</button>
+            <button class="pin-key" onclick="pinKey('3')">3</button>
+            <button class="pin-key" onclick="pinKey('4')">4</button>
+            <button class="pin-key" onclick="pinKey('5')">5</button>
+            <button class="pin-key" onclick="pinKey('6')">6</button>
+            <button class="pin-key" onclick="pinKey('7')">7</button>
+            <button class="pin-key" onclick="pinKey('8')">8</button>
+            <button class="pin-key" onclick="pinKey('9')">9</button>
+            <button class="pin-key del" onclick="pinKey('del')">⌫</button>
+            <button class="pin-key" onclick="pinKey('0')">0</button>
+            <button class="pin-key del" onclick="pinKey('clr')">CLR</button>
+          </div>
+          <div class="pin-error" id="pinError"></div>
+        </div>
+      </div>
+
+      <!-- TECH PANEL -->
+      <div class="tech-panel" id="techPanel">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div style="font-size:12px;color:var(--tech-color);font-weight:600;">✅ SNR Tech Access Granted</div>
+          <button class="log-btn" onclick="techLogout()" style="border-color:var(--danger);color:var(--danger);">Logout</button>
+        </div>
+
+        <div class="tech-tabs">
+          <div class="tech-tab active" onclick="switchTechTab('hours',this)">Machine Hours</div>
+          <div class="tech-tab" onclick="switchTechTab('schedule',this)">Edit Schedule</div>
+        </div>
+
+        <!-- HOURS EDITOR -->
+        <div class="tech-tab-content active" id="tt-hours">
+          <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Set the current hour meter reading for each machine. This drives all maintenance due calculations on the Dashboard.</p>
+          <div class="hours-editor">
+            <div class="hours-editor-card">
+              <h4 class="h4-fl">🚜 Front Loader — FL-01</h4>
+              <div class="current-hours-display" style="color:var(--fl-color);" id="techFlHours">— hrs</div>
+              <div class="set-hours-row">
+                <input type="number" id="newFlHours" placeholder="e.g. 1240" min="0">
+                <button class="set-btn" onclick="setHours('FL')">Set Hours</button>
+              </div>
+              <div class="hours-note" id="flHoursNote">Last set: not recorded</div>
+            </div>
+            <div class="hours-editor-card">
+              <h4 class="h4-tb">🚜 Tractor / Snow Blower — TB-01</h4>
+              <div class="current-hours-display" style="color:var(--tb-color);" id="techTbHours">— hrs</div>
+              <div class="set-hours-row">
+                <input type="number" id="newTbHours" placeholder="e.g. 870" min="0">
+                <button class="set-btn" onclick="setHours('TB')">Set Hours</button>
+              </div>
+              <div class="hours-note" id="tbHoursNote">Last set: not recorded</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCHEDULE EDITOR -->
+        <div class="tech-tab-content" id="tt-schedule">
+          <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Edit maintenance task names, intervals (in engine hours), and last-completed hours. Changes take effect immediately on the Dashboard.</p>
+          <div class="sched-machine-tabs">
+            <div class="smt active" id="smt-FL" onclick="switchSchedMachine('FL',this)">FL-01 Front Loader</div>
+            <div class="smt" id="smt-TB" onclick="switchSchedMachine('TB',this)">TB-01 Tractor/Blower</div>
+          </div>
+          <div id="schedEditorArea"></div>
+          <button class="add-row-btn" onclick="addSchedRow()">+ Add Task</button><br>
+          <button class="save-sched-btn" onclick="saveSchedule()">Save Schedule Changes</button>
+        </div>
+
+      </div><!-- /techPanel -->
+    </div><!-- /modal-body -->
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ════════════════════════════════════════════════
+   CONFIG
+════════════════════════════════════════════════ */
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwArr5zIM6sY_zG98XZZvzTOFkvlUq71738qoDk_v8HQufUoCSGe8xV7v5edJHqJN5nDQ/exec';
+const TECH_PIN   = '1234';
+
+/* ════════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════════ */
+let techUnlocked = false;
+let currentMachine = null;
+let dashMachine = 'FL';
+let schedMachine = 'FL';
+let pinBuffer = '';
+
+// Machine hours state
+let machineHours = {
+  FL: { hours: null, updatedAt: null, setBy: null },
+  TB: { hours: null, updatedAt: null, setBy: null },
+};
+
+// Maintenance schedule (editable) — hrsInterval = engine hours, lastDoneHrs = hours at last service
+let maintData = {
+  FL: [
+    { label:'Engine Oil & Filter',              hrsInterval: 250,  lastDoneHrs: 1050, calInterval:'3 months' },
+    { label:'Hydraulic Fluid & Filter',         hrsInterval: 500,  lastDoneHrs: 900,  calInterval:'6 months' },
+    { label:'Air Filter (Primary)',             hrsInterval: 500,  lastDoneHrs: 750,  calInterval:'as restricted' },
+    { label:'Air Filter (Safety Element)',      hrsInterval: 1000, lastDoneHrs: 900,  calInterval:'annually' },
+    { label:'Fuel Filter',                      hrsInterval: 500,  lastDoneHrs: 1050, calInterval:'' },
+    { label:'Transmission / Gearbox Oil',      hrsInterval: 1000, lastDoneHrs: 900,  calInterval:'annually' },
+    { label:'Coolant Flush & Refill',           hrsInterval: 2000, lastDoneHrs: 900,  calInterval:'2 years' },
+    { label:'Brake Fluid Change',               hrsInterval: 2000, lastDoneHrs: 900,  calInterval:'2 years' },
+    { label:'Grease All Points',                hrsInterval: 50,   lastDoneHrs: 1190, calInterval:'' },
+    { label:'Blade Cutting Edge Inspect/Replace',hrsInterval:50,   lastDoneHrs: 1190, calInterval:'' },
+    { label:'Hydraulic Hose Full Inspection',   hrsInterval: 1000, lastDoneHrs: 900,  calInterval:'annually' },
+    { label:'Drive Belt Inspection/Replace',    hrsInterval: 1000, lastDoneHrs: 900,  calInterval:'' },
+    { label:'Battery Check & Terminal Clean',   hrsInterval: 100,  lastDoneHrs: 1100, calInterval:'monthly winter' },
+  ],
+  TB: [
+    { label:'Engine Oil & Filter',              hrsInterval: 200,  lastDoneHrs: 800,  calInterval:'3 months' },
+    { label:'Hydraulic Fluid & Filter',         hrsInterval: 500,  lastDoneHrs: 700,  calInterval:'6 months' },
+    { label:'Air Filter',                       hrsInterval: 250,  lastDoneHrs: 750,  calInterval:'as restricted' },
+    { label:'Fuel Filter',                      hrsInterval: 250,  lastDoneHrs: 800,  calInterval:'' },
+    { label:'Blower Gearbox Oil',               hrsInterval: 100,  lastDoneHrs: 680,  calInterval:'' },
+    { label:'PTO Shear Bolt Stock Check',       hrsInterval: 100,  lastDoneHrs: 800,  calInterval:'monthly' },
+    { label:'Grease All Points incl PTO/Auger', hrsInterval: 50,   lastDoneHrs: 840,  calInterval:'' },
+    { label:'Impeller Blade Inspect/Replace',   hrsInterval: 50,   lastDoneHrs: 700,  calInterval:'' },
+    { label:'Auger Flighting Inspection',       hrsInterval: 100,  lastDoneHrs: 700,  calInterval:'' },
+    { label:'3-Point Linkage Pin & Bushing',    hrsInterval: 200,  lastDoneHrs: 800,  calInterval:'monthly in-season' },
+    { label:'Transmission / Gearbox Oil',      hrsInterval: 1000, lastDoneHrs: 700,  calInterval:'annually' },
+    { label:'Hydraulic Hose Full Inspection',   hrsInterval: 1000, lastDoneHrs: 700,  calInterval:'annually' },
+    { label:'Coolant Flush',                    hrsInterval: 2000, lastDoneHrs: 700,  calInterval:'2 years' },
+    { label:'Diff Lock / 4WD Inspection',       hrsInterval: 1000, lastDoneHrs: 700,  calInterval:'annually' },
+  ],
+};
+
+/* ════════════════════════════════════════════════
+   DATE/TIME
+════════════════════════════════════════════════ */
+(function(){
+  const now = new Date();
+  document.getElementById('hdrDate').innerHTML =
+    now.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'}) +
+    '<br>' + now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  const d = document.getElementById('fDate');
+  const t = document.getElementById('fTime');
+  if(d) d.value = now.toISOString().slice(0,10);
+  if(t) t.value = now.toTimeString().slice(0,5);
+})();
+
+/* ════════════════════════════════════════════════
+   TAB SWITCHING
+════════════════════════════════════════════════ */
+function switchTab(tab, el) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  if(el) el.classList.add('active');
+  if(tab === 'dashboard') buildDashboard();
+  if(tab === 'maintenance') buildMaintenanceTab();
+}
+
+/* ════════════════════════════════════════════════
+   DASHBOARD
+════════════════════════════════════════════════ */
+function switchDashMachine(m) {
+  dashMachine = m;
+  document.getElementById('dmt-FL').classList.toggle('active', m === 'FL');
+  document.getElementById('dmt-TB').classList.toggle('active', m === 'TB');
+  document.getElementById('dmt-FL').className = 'dmtab fl' + (m==='FL'?' active':'');
+  document.getElementById('dmt-TB').className = 'dmtab tb' + (m==='TB'?' active':'');
+  buildDashboard();
+}
+
+function buildDashboard() {
+  const m    = dashMachine;
+  const mh   = machineHours[m];
+  const hrs  = mh.hours;
+  const data = maintData[m];
+
+  // hours strip
+  const hv = document.getElementById('dashHoursVal');
+  hv.textContent = hrs !== null ? hrs + ' hrs' : '— hrs';
+  hv.className = 'hours-val ' + m.toLowerCase();
+  document.getElementById('dashHoursUpdated').textContent = mh.updatedAt || 'not set';
+  document.getElementById('dashHoursSetBy').textContent   = mh.setBy     || '—';
+
+  // compute status per item
+  function getItemStatus(item) {
+    if(hrs === null) return { status:'unknown', pct:0, dueAt: item.lastDoneHrs + item.hrsInterval, remaining: null };
+    const dueAt = item.lastDoneHrs + item.hrsInterval;
+    const remaining = dueAt - hrs;
+    const warn10 = item.hrsInterval * 0.10;
+    let status;
+    if(remaining <= 0)       status = 'due';
+    else if(remaining <= warn10) status = 'warn';
+    else                         status = 'ok';
+    const pct = Math.min(100, Math.round(((hrs - item.lastDoneHrs) / item.hrsInterval) * 100));
+    return { status, pct, dueAt, remaining };
+  }
+
+  const statuses = data.map(i => getItemStatus(i));
+  const due  = statuses.filter(s=>s.status==='due').length;
+  const warn = statuses.filter(s=>s.status==='warn').length;
+  const ok   = statuses.filter(s=>s.status==='ok').length;
+
+  // alert cards
+  document.getElementById('dashAlertGrid').innerHTML = `
+    <div class="alert-card due">
+      <div class="alert-count">${due}</div>
+      <div class="alert-label">Overdue</div>
+      <div class="alert-desc">Tasks past their due hours — action required immediately</div>
+    </div>
+    <div class="alert-card warn">
+      <div class="alert-count">${warn}</div>
+      <div class="alert-label">Due Soon</div>
+      <div class="alert-desc">Within 10% of interval — schedule within next shift cycle</div>
+    </div>
+    <div class="alert-card ok">
+      <div class="alert-count">${ok}</div>
+      <div class="alert-label">On Track</div>
+      <div class="alert-desc">No action required at current hours</div>
+    </div>`;
+
+  // priority table (due + warn only)
+  const priorityItems = data.map((item,i)=>({item, s:statuses[i]})).filter(r=>r.s.status!=='ok');
+  document.getElementById('dashTableBody').innerHTML = hrs === null
+    ? `<tr><td colspan="6" style="text-align:center;color:var(--muted2);padding:24px;">⚠ No hours set for this machine. Log in as SNR Tech to set current hours.</td></tr>`
+    : priorityItems.length === 0
+      ? `<tr><td colspan="6" style="text-align:center;color:var(--ok);padding:24px;">✅ All tasks on track at current hours.</td></tr>`
+      : priorityItems.map(r=>renderDashRow(r.item, r.s)).join('');
+
+  // all items table
+  document.getElementById('dashAllBody').innerHTML = hrs === null
+    ? `<tr><td colspan="6" style="text-align:center;color:var(--muted2);padding:24px;">Set machine hours via SNR Tech login to see status.</td></tr>`
+    : data.map((item,i)=>renderDashRow(item,statuses[i])).join('');
+}
+
+function renderDashRow(item, s) {
+  const pillClass = s.status==='due'?'pill-due':s.status==='warn'?'pill-warn':'pill-ok';
+  const pillLabel = s.status==='due'?'OVERDUE':s.status==='warn'?'DUE SOON':'ON TRACK';
+  const fillClass = s.status==='due'?'fill-due':s.status==='warn'?'fill-warn':'fill-ok';
+  const remainTxt = s.remaining === null ? '—'
+    : s.remaining <= 0 ? `<span style="color:var(--danger);font-weight:700;">${Math.abs(s.remaining)} hrs overdue</span>`
+    : `<span style="color:${s.status==='warn'?'var(--warn)':'var(--ok)'};">${s.remaining} hrs left</span>`;
+  const calNote = item.calInterval ? ` <span style="color:var(--muted2);font-size:10px;">(or ${item.calInterval})</span>` : '';
+  return `<tr>
+    <td style="font-weight:500;">${item.label}</td>
+    <td style="color:var(--muted2);">Every ${item.hrsInterval} hrs${calNote}</td>
+    <td style="color:var(--muted2);">${item.lastDoneHrs} hrs</td>
+    <td style="font-weight:600;">${s.dueAt} hrs</td>
+    <td>
+      <div class="hrs-bar-wrap">
+        <div class="hrs-bar"><div class="hrs-fill ${fillClass}" style="width:${s.pct}%;"></div></div>
+        <div class="hrs-text">${remainTxt}</div>
+      </div>
+    </td>
+    <td><span class="status-pill ${pillClass}"><span class="pill-dot"></span>${pillLabel}</span></td>
+  </tr>`;
+}
+
+/* ════════════════════════════════════════════════
+   CHECKLIST DATA
+════════════════════════════════════════════════ */
+const SECTIONS_COMMON = [
+  { id:'cabin', icon:'🏠', title:'Operator Cabin', badge:'BOTH UNITS', items:[
+    { id:'cab_heat',   label:'Cabin Heating System', hint:'Test heater output. Check for unusual smells (burning dust, coolant). Verify temperature control operation.', yn:true, sev:'high' },
+    { id:'cab_wiper',  label:'Windscreen Wiper', hint:'Test wiper motor, blade contact and sweep range. Check wiper fluid reservoir if fitted.', yn:true, sev:'medium' },
+    { id:'cab_lights', label:'All Cabin Lights', hint:'Work lights, instrument lights, warning lights. Test all switches.', yn:true, sev:'high' },
+    { id:'cab_mirror', label:'Mirrors / Visibility', hint:'All mirrors present, clean, and correctly angled. Windscreen clear of ice and frost.', yn:true, sev:'high' },
+    { id:'cab_door',   label:'Cabin Door / Seals', hint:'Door hinges, latch, and rubber seals. No drafts. Emergency exit operable.', yn:true, sev:'medium' },
+    { id:'cab_belt',   label:'Operator Seatbelt', hint:'Buckle functions correctly and locks under pull. Belt webbing undamaged.', yn:true, sev:'critical' },
+    { id:'cab_controls', label:'All Controls & Instrumentation', hint:'Verify gauges reading, warning lights extinguished, all levers and pedals move freely without sticking.', yn:true, sev:'critical' },
+    { id:'cab_extinguisher', label:'Fire Extinguisher Present & Charged', hint:'Extinguisher in holder, pin intact, pressure gauge in green zone.', yn:true, sev:'critical' },
+  ]},
+  { id:'fluids', icon:'🛢️', title:'Fluids & Levels', badge:'BOTH UNITS', items:[
+    { id:'fl_engine_oil', label:'Engine Oil Level & Condition', hint:'Check dipstick cold or as per manual. Oil should be between MIN and MAX, honey/amber colour. Dark or milky oil indicates contamination.', yn:true, reading:true, unit:'Level', sev:'critical' },
+    { id:'fl_coolant',    label:'Engine Coolant Level', hint:'Check overflow reservoir only when engine is cold. Level should be at MIN/MAX marks. Check for rust or oily residue.', yn:true, sev:'critical' },
+    { id:'fl_hyd',        label:'Hydraulic Fluid Level', hint:'Check sight glass or dipstick per manual. Look for milky discolouration indicating water ingress.', yn:true, sev:'critical' },
+    { id:'fl_fuel',       label:'Fuel Level (Diesel)', hint:'Sufficient fuel for shift. Note level reading.', yn:true, reading:true, unit:'% Full', sev:'high' },
+    { id:'fl_trans',      label:'Transmission / Gearbox Fluid', hint:'Check level per machine spec. Contaminated fluid (dark/burnt smell) must be flagged for service.', yn:true, sev:'high' },
+    { id:'fl_brake',      label:'Brake Fluid Level', hint:'Check master cylinder reservoir. Any drop since last check is a RED FLAG — check for leaks.', yn:true, sev:'critical' },
+    { id:'fl_washer',     label:'Washer Fluid', hint:'Top up with antifreeze-rated washer fluid. Standard water will freeze in cabin lines at operating temperatures.', yn:true, sev:'medium' },
+  ]},
+  { id:'engine', icon:'⚙️', title:'Engine & Drive System', badge:'BOTH UNITS', items:[
+    { id:'eng_start',   label:'Cold Start — No Unusual Noise', hint:'Engine should start within normal cranks. Listen for knocking, rattling, excessive smoke. Allow warm-up.', yn:true, sev:'critical' },
+    { id:'eng_smoke',   label:'Exhaust — No Excessive Smoke', hint:'White smoke on cold start is normal. Persistent blue (oil burning) or black (rich fuelling) smoke must be flagged.', yn:true, sev:'high' },
+    { id:'eng_leak',    label:'Engine Bay — No Fluid Leaks', hint:'Inspect underside and engine bay for fresh oil, coolant, or fuel drips. Note exact location of any leak.', yn:true, sev:'critical' },
+    { id:'eng_belt',    label:'Drive Belts / Fan Belts', hint:'Inspect for cracking, fraying, glazing. Check tension — belt should not deflect more than 10-15mm under thumb pressure.', yn:true, sev:'high' },
+    { id:'eng_airfilter', label:'Air Filter Indicator', hint:'If fitted, check restriction indicator. In heavy snow conditions filters block faster. Replace without delay.', yn:true, sev:'high' },
+    { id:'eng_battery', label:'Battery Terminals & Charge', hint:'Clean, tight terminals. No corrosion (white/green crust). Check charge indicator or test voltage if meter available.', yn:true, sev:'high' },
+    { id:'eng_alt',     label:'Alternator / Charging Warning Light Off', hint:'Confirm no charging warning light on dash during operation.', yn:true, sev:'high' },
+  ]},
+  { id:'structure', icon:'🔩', title:'Frame & Structural Integrity', badge:'BOTH UNITS', items:[
+    { id:'str_frame',    label:'Main Chassis Frame — No Cracks or Deformation', hint:'Walk-around inspection. Pay attention to weld seams, stress-concentration points, and loader mounting brackets. Any crack = immediate STOP.', yn:true, sev:'critical' },
+    { id:'str_subframe', label:'Attachment Sub-Frame Integrity', hint:'Inspect the sub-frame connecting the attachment to the main machine. Check all connection points, gussets, and mounting lugs for cracks or elongated holes.', yn:true, sev:'critical' },
+    { id:'str_weld',     label:'Welds — No New Cracking or Separation', hint:'Focus on custom-fabricated welds. Cracks often appear first at heat-affected zones adjacent to the weld bead. Wipe clean for better visibility.', yn:true, sev:'critical' },
+    { id:'str_mounting', label:'Attachment Mounting Points — No Movement', hint:'With attachment lowered to ground, try to rock/twist it. Any movement at the mounting points (not the pivot) is abnormal.', yn:true, sev:'critical' },
+    { id:'str_guard',    label:'All Guards & Shields In Place', hint:'Check all driveshaft guards, belt covers, heat shields. Guards must be replaced before operation.', yn:true, sev:'high' },
+  ]},
+  { id:'bearings', icon:'🔵', title:'Bearings & Pivot Points', badge:'BOTH UNITS', items:[
+    { id:'brg_general',  label:'Bearing Noise Check — Cold Startup', hint:'After engine start, listen carefully while slowly cycling all working functions. Any grinding, rumbling, or squealing indicates bearing wear. Bearings often sound worst when cold.', yn:true, sev:'critical' },
+    { id:'brg_heat',     label:'Bearing Temperature Check (post 15-min run)', hint:'After 15 minutes of operation, hand-check all accessible bearing housings. Should be warm, not hot. Too hot to hold hand = investigate.', yn:true, sev:'high' },
+    { id:'brg_grease',   label:'All Grease Nipples Present & Lubricated', hint:'Check every grease point. If nipple is missing, replace before operation. Ungreased bearings in sub-zero conditions deteriorate rapidly.', yn:true, sev:'high' },
+    { id:'brg_slew',     label:'All Pivot & Slewing Points — No Excessive Play', hint:'Physically check king pins, pivot pins, and slewing rings for excessive play. Movement exceeding 3-5mm is a fault.', yn:true, sev:'high' },
+    { id:'brg_wheel',    label:'Wheel Bearings — No Rumble or Pull', hint:'During slow driving, note any vibration through steering, or tendency for the machine to pull to one side.', yn:true, sev:'critical' },
+  ]},
+  { id:'hyd', icon:'💧', title:'Hydraulic System', badge:'BOTH UNITS', items:[
+    { id:'hyd_hoses',   label:'All Hydraulic Hoses — No Damage or Weeping', hint:'Inspect full length of all hoses. Slight weeping = warning; active dripping = stop-work. High-pressure injection injury is fatal.', yn:true, sev:'critical' },
+    { id:'hyd_fittings',label:'All Couplings & Fittings Tight', hint:'Hand-check all accessible fittings. Use cardboard to find high-pressure leaks — never bare hands.', yn:true, sev:'critical' },
+    { id:'hyd_cylinder',label:'Hydraulic Cylinders — No Scoring or Seal Weep', hint:'Inspect ram shafts for scoring. Check wiper seals for oil film accumulation indicating seal deterioration.', yn:true, sev:'high' },
+    { id:'hyd_pressure',label:'System Pressure Normal During Operation', hint:'Cycle functions fully under light load. Sluggish or inconsistent movement indicates low pressure, worn pump, or blocked filter.', yn:true, sev:'high' },
+    { id:'hyd_filter_ind',label:'Hydraulic Filter Indicator — Not In Red Zone', hint:'Red = filter blocked, must be replaced before further operation.', yn:true, sev:'critical' },
+  ]},
+  { id:'tyres', icon:'⬛', title:'Tyres & Undercarriage', badge:'BOTH UNITS', items:[
+    { id:'tyr_pressure', label:'Tyre Pressure — All Four (check cold)', hint:'Refer to machine plate for correct pressures. Check with gauge — do not estimate.', yn:true, reading:true, unit:'PSI', sev:'high' },
+    { id:'tyr_damage',   label:'Tyre Sidewalls & Tread — No Cuts or Bulges', hint:'Sidewall cuts from rocks under snow are common. Any bulge = immediate remove from service.', yn:true, sev:'critical' },
+    { id:'tyr_chains',   label:'Snow Chains Fitted, Tensioned & Undamaged', hint:'Confirm chains are present, correctly tensioned, and no broken links.', yn:true, na:true, sev:'high' },
+  ]},
+];
+
+const SECTIONS_FL = [
+  { id:'blade', icon:'🔪', title:'Snow Blade (Front Loader Attachment)', badge:'FL ONLY', items:[
+    { id:'bl_frame',      label:'Blade Main Frame — No Cracks or Deformation', hint:'Inspect full width of blade frame, particularly corner gussets and centre pivot area.', yn:true, sev:'critical' },
+    { id:'bl_edge',       label:'Cutting Edge Wear & Condition', hint:'Cutting edge should be within wear limits. Inspect full length for cracking, chips, or excessive thinning. Uneven wear indicates misalignment.', yn:true, sev:'high' },
+    { id:'bl_edge_bolts', label:'Cutting Edge Mounting Bolts — All Present & Tight', hint:'Count all bolts. Any missing bolt allows adjacent bolts to carry excess load and fail in sequence.', yn:true, sev:'critical' },
+    { id:'bl_pin1',       label:'Main Mounting / King Pin Present & Secured', hint:'Primary attachment pin connecting blade to loader arms. Verify split pin or locking bolt is in place and secured.', yn:true, sev:'critical' },
+    { id:'bl_pin2',       label:'All Secondary Locking Pins Secure', hint:'Check every pin in the attachment system. Carry spare split pins. A pin lost mid-operation = uncontrolled attachment movement.', yn:true, sev:'critical' },
+    { id:'bl_angle',      label:'Blade Angle Actuator / Directional Cylinder', hint:'Test full range of blade angle movement. Check for hydraulic drift (blade moving on its own when control is neutral).', yn:true, sev:'high' },
+    { id:'bl_skid',       label:'Blade Skid Shoes / Wear Pads', hint:'Check wear level and that they are bolted securely.', yn:true, sev:'medium' },
+    { id:'bl_pivot_brg',  label:'Blade Pivot Bearings / Slewing Bushings', hint:'Manually test blade tilt: minimal free-play before hydraulic resistance is felt. Excessive slop = worn bushings.', yn:true, sev:'high' },
+    { id:'bl_loader_arms',label:'Loader Arm Frame & Pins — No Cracks', hint:'Common crack locations: rear pivot weld, mid-arm reinforcing gussets, and around the quick-attach frame.', yn:true, sev:'critical' },
+    { id:'bl_loader_hyd', label:'Loader Lift & Tilt Cylinders — No Drift', hint:'Raise attachment to maximum height. Release controls. If attachment drifts down noticeably within 60 seconds, cylinder seals or load hold valves need attention.', yn:true, sev:'high' },
+  ]},
+];
+
+const SECTIONS_TB = [
+  { id:'blower', icon:'🌀', title:'PTO Snow Blower (Rear Attachment)', badge:'TB ONLY', items:[
+    { id:'sb_pto',        label:'PTO Shaft — Guard Present & Shaft Straight', hint:'PTO guard MUST be in place before operation. Check shaft is straight. A bent PTO shaft will destroy the gearbox in minutes.', yn:true, sev:'critical' },
+    { id:'sb_pto_shear',  label:'PTO Shear Bolt Condition', hint:'Inspect shear bolt(s) at PTO coupling. Replace with CORRECT GRADE bolt only — never use high-tensile as a substitute.', yn:true, sev:'critical' },
+    { id:'sb_gearbox',    label:'Blower Gearbox Oil Level', hint:'Check gearbox oil filler/sight glass per manual. Gearbox overheating due to low oil is a common failure mode.', yn:true, sev:'critical' },
+    { id:'sb_gearbox_noise',label:'Gearbox — No Grinding or Knocking', hint:'Engage PTO at low revs and listen carefully before increasing to operating speed.', yn:true, sev:'critical' },
+    { id:'sb_impeller',   label:'Impeller Rotor — No Damage or Obstruction', hint:'Disengage PTO and power off before inspecting. Check for ice build-up, foreign objects, and blade/paddle damage.', yn:true, sev:'critical' },
+    { id:'sb_blades',     label:'Impeller Paddles / Blades — Wear Within Limits', hint:'Inspect each paddle for cracking, thinning at leading edge, or missing material.', yn:true, sev:'high' },
+    { id:'sb_auger',      label:'Auger / Feed Screw — No Damage or Wrap', hint:'Check that no wire or rope is wrapped around the auger shaft. Inspect auger flighting for cracks or missing sections.', yn:true, sev:'critical' },
+    { id:'sb_chute',      label:'Discharge Chute — Clear, Moves Freely', hint:'Chute must be free of ice pack. Rotate manually through full range. Check deflector operation.', yn:true, sev:'high' },
+    { id:'sb_chute_dir',  label:'Chute Direction Control — Full Range of Movement', hint:'Test chute rotation from cab or control panel. Confirm rotation and deflector controls respond correctly and hold position.', yn:true, sev:'high' },
+    { id:'sb_mounting',   label:'3-Point Linkage / Mounting — All Pins Secure', hint:'Inspect all three 3-point hitch pins: top link and both lower links. Verify split pins or linch pins in place.', yn:true, sev:'critical' },
+    { id:'sb_bearing_impeller',label:'Impeller Bearing Housings — No Heat After Run', hint:'After 15-min operation, check impeller shaft bearing housings. Excessive heat (cannot hold hand) = bearing failure imminent.', yn:true, sev:'critical' },
+    { id:'sb_bearing_auger',label:'Auger Shaft Bearing — No Noise or Heat', hint:'Same check as impeller bearing. These are high-load bearings operating in abrasive/wet conditions.', yn:true, sev:'critical' },
+  ]},
+  { id:'tractor', icon:'🚜', title:'Tractor Specific Checks', badge:'TB ONLY', items:[
+    { id:'tr_pto_clutch', label:'PTO Engagement / Disengagement — Clean Operation', hint:'PTO should engage and disengage smoothly without jarring. A slipping or jerky PTO clutch under load requires immediate service.', yn:true, sev:'critical' },
+    { id:'tr_diff_lock',  label:'Differential Lock — Engage/Disengage Correctly', hint:'Test diff lock function. Must disengage cleanly when turned.', yn:true, sev:'high' },
+    { id:'tr_linkage',    label:'Rear Hydraulic Linkage — Lift & Lower Smooth', hint:'Raise and lower linkage through full travel. No jerking. Check for hydraulic drift when lowered under attachment weight.', yn:true, sev:'high' },
+    { id:'tr_steering',   label:'Steering — Full Lock to Lock, No Binding', hint:'Turn full lock both directions at low speed. Note any tight spots or vibration.', yn:true, sev:'critical' },
+    { id:'tr_brakes',     label:'Brakes — Equal Bite Both Sides', hint:'Test brakes at slow speed. Machine must stop straight. Pulling to one side indicates unequal brake adjustment.', yn:true, sev:'critical' },
+  ]},
+];
+
+const SECTIONS_SIGNOFF = [
+  { id:'signoff', icon:'✅', title:'Pre-Use Sign-Off', badge:'BOTH UNITS', items:[
+    { id:'so_safe',    label:'Machine is SAFE to operate for this shift', hint:'Based on all checks above, the operator confirms the machine presents no immediate safety concerns.', yn:true, sev:'critical' },
+    { id:'so_issues',  label:'All identified issues have been documented above', hint:'Confirm that every NO response has a note recorded.', yn:true, sev:'high' },
+    { id:'so_briefed', label:'Supervisor has been informed of any outstanding issues', hint:'If any critical or high-severity items are marked NO, supervisor verbal sign-off is mandatory before operation begins.', yn:true, sev:'critical' },
+  ]},
+];
+
+/* ════════════════════════════════════════════════
+   BUILD CHECKLIST
+════════════════════════════════════════════════ */
+let allItems = {};
+
+function buildChecklist(machine) {
+  const area = document.getElementById('checklistArea');
+  allItems = {};
+  const sections = [...SECTIONS_COMMON, ...(machine==='FL'?SECTIONS_FL:SECTIONS_TB), ...SECTIONS_SIGNOFF];
+  area.innerHTML = sections.map(s => buildSection(s)).join('');
+  updateSummary();
+}
+
+function buildSection(s) {
+  return `<div class="check-section" id="sec-${s.id}">
+    <div class="section-header" onclick="toggleSection('${s.id}')">
+      <div class="section-title-wrap">
+        <span class="section-icon">${s.icon}</span>
+        <span class="section-title">${s.title}</span>
+        <span class="section-badge">${s.badge}</span>
+      </div>
+      <div class="section-progress">
+        <div class="progress-bar"><div class="progress-fill" id="prog-${s.id}" style="width:0%"></div></div>
+        <div class="progress-text" id="progt-${s.id}">0/${s.items.length}</div>
+        <span class="chevron">▼</span>
+      </div>
+    </div>
+    <div class="section-body">${s.items.map(i=>buildItem(i)).join('')}</div>
+  </div>`;
+}
+
+function buildItem(i) {
+  const sevBadge = i.sev ? `<span class="severity sev-${i.sev}">${i.sev}</span>` : '';
+  const reading  = i.reading ? `<div class="reading-input"><input type="number" id="rdg-${i.id}" placeholder="–"><span class="reading-unit">${i.unit||''}</span></div>` : '';
+  const naBtn    = i.na ? `<button class="yn-btn na" id="na-${i.id}" onclick="setYN('${i.id}','na')">N/A</button>` : '';
+  return `<div class="check-item" id="item-${i.id}">
+    <div class="item-label">${sevBadge}<strong>${i.label}</strong><span class="item-hint">${i.hint}</span></div>
+    ${reading}
+    <div class="yn-buttons">
+      <button class="yn-btn yes" id="yes-${i.id}" onclick="setYN('${i.id}','yes')">YES</button>
+      <button class="yn-btn no"  id="no-${i.id}"  onclick="setYN('${i.id}','no')">NO</button>
+      ${naBtn}
+    </div>
+    <div class="item-note" id="note-wrap-${i.id}">
+      <input type="text" id="note-${i.id}" placeholder="⚠ Describe the issue — location, severity, action taken">
+    </div>
+  </div>`;
+}
+
+function setYN(id, val) {
+  ['yes','no','na'].forEach(v=>{ const b=document.getElementById(v+'-'+id); if(b) b.classList.toggle('active',v===val); });
+  allItems[id] = val;
+  const row      = document.getElementById('item-'+id);
+  const noteWrap = document.getElementById('note-wrap-'+id);
+  if(val==='no'){ row.classList.add('has-issue'); noteWrap.classList.add('visible'); }
+  else { row.classList.remove('has-issue'); noteWrap.classList.remove('visible'); }
+  updateSectionProgress(id);
+  updateSummary();
+}
+
+function updateSectionProgress(itemId) {
+  const allSections = [...SECTIONS_COMMON,...SECTIONS_FL,...SECTIONS_TB,...SECTIONS_SIGNOFF];
+  for(const s of allSections) {
+    if(s.items.some(i=>i.id===itemId)) {
+      const done = s.items.filter(i=>allItems[i.id]).length;
+      const pBar = document.getElementById('prog-'+s.id);
+      const pTxt = document.getElementById('progt-'+s.id);
+      if(pBar) pBar.style.width = Math.round(done/s.items.length*100)+'%';
+      if(pTxt) pTxt.textContent = done+'/'+s.items.length;
+      break;
+    }
+  }
+}
+
+function updateSummary() {
+  const vals = Object.values(allItems);
+  const ok   = vals.filter(v=>v==='yes'||v==='na').length;
+  const fail = vals.filter(v=>v==='no').length;
+  const allSections = [...SECTIONS_COMMON, ...(currentMachine==='FL'?SECTIONS_FL:SECTIONS_TB), ...SECTIONS_SIGNOFF];
+  const total = allSections.reduce((a,s)=>a+s.items.length,0);
+  const pend  = total - vals.length;
+  const pct   = total > 0 ? Math.round(vals.length/total*100) : 0;
+  document.getElementById('sOk').textContent  = ok;
+  document.getElementById('sFail').textContent = fail;
+  document.getElementById('sPend').textContent = pend;
+  document.getElementById('sPct').textContent  = pct+'%';
+  document.getElementById('sFail').style.color = fail>0?'var(--danger)':'var(--ok)';
+  document.getElementById('sPend').style.color = pend>0?'var(--muted2)':'var(--ok)';
+  // append submit block if complete and not already there
+  const area = document.getElementById('checklistArea');
+  if(pct===100 && !document.getElementById('submitSection')) {
+    area.insertAdjacentHTML('beforeend', buildSubmitBlock());
+  }
+}
+
+function buildSubmitBlock() {
+  return `<div class="submit-section" id="submitSection">
+    <h3>✅ All Items Complete — Submit Check</h3>
+    <div class="submit-grid">
+      <div class="field-group"><label>Operator Signature (type full name)</label><input type="text" id="sigOperator" placeholder="Full name as signature"></div>
+      <div class="field-group"><label>Supervisor Notified of Issues?</label>
+        <select id="sigSupervisor"><option value="">-- Select --</option><option>Yes — verbal sign-off obtained</option><option>No issues to report</option><option>Supervisor unavailable — noted in log</option></select>
+      </div>
+      <div class="field-group"><label>Hour Meter Reading</label><input type="number" id="sigHours" placeholder="e.g. 1243"></div>
+    </div>
+    <div class="field-group" style="margin-bottom:12px;">
+      <label>General Notes / Additional Observations</label>
+      <textarea id="sigNotes" rows="2" style="width:100%;background:#fff;border:1px solid var(--border2);color:var(--text);padding:8px 11px;border-radius:5px;font-family:'Barlow',sans-serif;font-size:13px;" placeholder="Any observations not captured in the checklist above..."></textarea>
+    </div>
+    <button class="submit-btn" onclick="submitCheck()">SUBMIT PRE-USE CHECK TO GOOGLE SHEETS</button>
+  </div>`;
+}
+
+function toggleSection(id) { document.getElementById('sec-'+id).classList.toggle('collapsed'); }
+
+function selectMachine(m) {
+  currentMachine = m;
+  document.getElementById('card-FL').classList.toggle('selected', m==='FL');
+  document.getElementById('card-TB').classList.toggle('selected', m==='TB');
+  document.getElementById('machineNote').classList.remove('show');
+  document.getElementById('formMeta').style.display = 'grid';
+  document.getElementById('summaryBanner').style.display = 'flex';
+  buildChecklist(m);
+}
+
+/* ════════════════════════════════════════════════
+   SUBMIT DAILY CHECK
+════════════════════════════════════════════════ */
+function submitCheck() {
+  const operator = document.getElementById('fOperator').value.trim();
+  const sig      = (document.getElementById('sigOperator')||{}).value?.trim();
+  if(!operator||!sig){ showToast('Please enter operator name and signature.','error'); return; }
+  if(!currentMachine){ showToast('Please select a machine first.','error'); return; }
+  const allSections = [...SECTIONS_COMMON,...(currentMachine==='FL'?SECTIONS_FL:SECTIONS_TB),...SECTIONS_SIGNOFF];
+  const issues = [];
+  allSections.forEach(s=>s.items.forEach(i=>{ if(allItems[i.id]==='no') {
+    const note = (document.getElementById('note-'+i.id)||{}).value||'';
+    issues.push(`${i.label}: ${note||'No detail provided'}`);
+  }}));
+  const payload = {
+    timestamp: new Date().toISOString(), type:'DAILY_CHECK',
+    machine: currentMachine==='FL'?'Front Loader (FL-01)':'Tractor/Snow Blower (TB-01)',
+    operator, date: document.getElementById('fDate').value,
+    time: document.getElementById('fTime').value,
+    shift: document.getElementById('fShift').value,
+    weather: document.getElementById('fWeather').value,
+    temperature: document.getElementById('fTemp').value,
+    total_items: Object.keys(allItems).length,
+    pass: Object.values(allItems).filter(v=>v==='yes'||v==='na').length,
+    fail: Object.values(allItems).filter(v=>v==='no').length,
+    issues: issues.join(' | '),
+    hours: (document.getElementById('sigHours')||{}).value||'',
+    supervisor: (document.getElementById('sigSupervisor')||{}).value||'',
+    notes: (document.getElementById('sigNotes')||{}).value||'',
+    raw_responses: JSON.stringify(allItems),
+  };
+  addToLog(payload);
+  if(SCRIPT_URL!=='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+    fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)})
+    .then(()=>showToast('✅ Check submitted to Google Sheets!','success'))
+    .catch(()=>showToast('⚠ Submission failed.','error'));
+  } else {
+    showToast('✅ Logged locally (Script URL not yet configured).','success');
+  }
+}
+
+/* ════════════════════════════════════════════════
+   MAINTENANCE TAB
+════════════════════════════════════════════════ */
+const SUMMER_CHECKS = [
+  { label:'Full Frame Weld Inspection (dye-pen or visual)', note:'Both machines' },
+  { label:'Hydraulic System Full Pressure Test', note:'Both machines' },
+  { label:'All Bearing Replacements (scheduled)', note:'Based on in-season bearing temperature logs' },
+  { label:'Hydraulic Hose Replace (if 3+ years old)', note:'Both machines' },
+  { label:'Cutting Edge Replace (blade)', note:'FL-01' },
+  { label:'Impeller Blades / Paddles Replace', note:'TB-01' },
+  { label:'Full Gearbox Inspect & Overhaul (blower)', note:'TB-01 — annual opening inspection' },
+  { label:'Cab Heater Service & Filter Clean', note:'Both machines' },
+  { label:'Full Electrical System Check & Re-termination', note:'Both machines' },
+  { label:'Tyres — Full Replace or Re-tread Assessment', note:'Both machines' },
+  { label:'Full Brake Inspection & Adjustment', note:'Both machines' },
+  { label:'Full Greasing & Replacement of All Grease Nipples', note:'Both machines' },
+  { label:'Load Test After Recommission', note:'Both machines — test under controlled load before operational use' },
+];
+
+function buildMaintenanceTab() {
+  function statusFromHrs(item, machine) {
+    const hrs = machineHours[machine].hours;
+    if(hrs===null) return 'ok';
+    const remaining = (item.lastDoneHrs + item.hrsInterval) - hrs;
+    if(remaining<=0) return 'due';
+    if(remaining <= item.hrsInterval*0.10) return 'warn';
+    return 'ok';
+  }
+  function renderItems(items, unit) {
+    return items.map(m=>`
+    <div class="maint-item">
+      <div style="flex:1;">
+        <div class="maint-label">${m.label}</div>
+        <div class="maint-interval">🔄 Every ${m.hrsInterval} hrs${m.calInterval?' or '+m.calInterval:''}</div>
+      </div>
+      <div class="maint-status">
+        <div class="last-done">@ ${m.lastDoneHrs} hrs</div>
+        <div class="status-dot dot-${statusFromHrs(m,unit.replace('-01',''))}"></div>
+        <button class="log-btn" onclick="logMaint('${unit}','${m.label.replace(/'/g,"\\'")}')">LOG</button>
+      </div>
+    </div>`).join('');
+  }
+  document.getElementById('maintFL').innerHTML = renderItems(maintData.FL,'FL-01');
+  document.getElementById('maintTB').innerHTML = renderItems(maintData.TB,'TB-01');
+  document.getElementById('summerChecks').innerHTML = SUMMER_CHECKS.map(c=>`
+    <div class="maint-item">
+      <div style="flex:1;"><div class="maint-label">${c.label}</div><div class="maint-interval">📍 ${c.note}</div></div>
+      <div class="maint-status"><button class="log-btn" onclick="logMaint('BOTH','${c.label.replace(/'/g,"\\'")}')">LOG COMPLETE</button></div>
+    </div>`).join('');
+}
+
+function logMaint(unit, task) {
+  const op    = prompt(`Log: ${task}\n\nTechnician name:`);
+  if(!op) return;
+  const hrs   = prompt('Hour meter reading at time of service:') || '';
+  const notes = prompt('Notes / parts used / supplier:') || '';
+  const payload = { timestamp:new Date().toISOString(), type:'MAINTENANCE', machine:unit, task, operator:op, hours:hrs, notes };
+  if(SCRIPT_URL!=='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+    fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)})
+    .then(()=>showToast('✅ Maintenance logged.','success'))
+    .catch(()=>showToast('⚠ Log failed.','error'));
+  } else {
+    showToast(`✅ ${task} logged for ${unit}.`,'success');
+  }
+}
+
+/* ════════════════════════════════════════════════
+   LOG TAB
+════════════════════════════════════════════════ */
+let sessionLog = [];
+function addToLog(p) {
+  sessionLog.unshift(p);
+  const body = document.getElementById('logBody');
+  body.innerHTML = sessionLog.map(r=>`
+    <tr>
+      <td>${new Date(r.timestamp).toLocaleString('en-GB')}</td>
+      <td><span class="badge-${r.machine.includes('Front')?'fl':'tb'}">${r.machine.includes('Front')?'FL-01':'TB-01'}</span></td>
+      <td>${r.operator}</td>
+      <td><span class="${r.fail>0?'badge-fail':'badge-pass'}">${r.fail>0?'ISSUES':'PASS'}</span></td>
+      <td style="color:${r.fail>0?'var(--danger)':'var(--muted2)'};">${r.fail>0?r.fail+' issue(s)':'–'}</td>
+      <td>${Math.round(r.pass/(r.total_items||1)*100)}%</td>
+    </tr>`).join('');
+}
+function clearLog() { sessionLog=[]; document.getElementById('logBody').innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted2);padding:28px;">No submissions this session.</td></tr>'; }
+
+/* ════════════════════════════════════════════════
+   SNR TECH MODAL
+════════════════════════════════════════════════ */
+function openTechModal() {
+  document.getElementById('techModal').classList.add('open');
+  if(techUnlocked) showTechPanel();
+  else showLoginScreen();
+}
+function closeTechModal() { document.getElementById('techModal').classList.remove('open'); }
+
+function showLoginScreen() {
+  document.getElementById('loginScreen').style.display='block';
+  document.getElementById('techPanel').style.display='none';
+  pinBuffer = ''; updatePinDisplay();
+}
+function showTechPanel() {
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('techPanel').style.display='block';
+  refreshHoursDisplay();
+  renderSchedEditor();
+}
+
+// PIN
+function pinKey(k) {
+  if(k==='del')      { pinBuffer = pinBuffer.slice(0,-1); }
+  else if(k==='clr') { pinBuffer = ''; }
+  else if(pinBuffer.length < 4) { pinBuffer += k; }
+  updatePinDisplay();
+  if(pinBuffer.length===4) {
+    if(pinBuffer===TECH_PIN) {
+      techUnlocked=true;
+      setTimeout(showTechPanel,200);
+      document.getElementById('techBadge').style.display='block';
+      document.getElementById('techLoginBtn').style.display='none';
+    } else {
+      document.getElementById('pinError').textContent='Incorrect PIN. Try again.';
+      setTimeout(()=>{ pinBuffer=''; updatePinDisplay(); document.getElementById('pinError').textContent=''; },900);
+    }
+  }
+}
+function updatePinDisplay() {
+  for(let i=0;i<4;i++) {
+    document.getElementById('pd'+i).classList.toggle('filled', i<pinBuffer.length);
+  }
+}
+function techLogout() {
+  techUnlocked=false;
+  pinBuffer='';
+  document.getElementById('techBadge').style.display='none';
+  document.getElementById('techLoginBtn').style.display='flex';
+  closeTechModal();
+}
+
+function switchTechTab(tab, el) {
+  document.querySelectorAll('.tech-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tech-tab-content').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tt-'+tab).classList.add('active');
+  if(el) el.classList.add('active');
+}
+
+/* HOURS EDITOR */
+function setHours(machine) {
+  const input = document.getElementById('new'+machine+'Hours');
+  const val   = parseFloat(input.value);
+  if(isNaN(val)||val<0){ showToast('Please enter a valid hour reading.','error'); return; }
+  machineHours[machine] = {
+    hours: val,
+    updatedAt: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}),
+    setBy: 'SNR Tech',
+  };
+  input.value='';
+  refreshHoursDisplay();
+  buildDashboard();
+  showToast(`✅ ${machine==='FL'?'Front Loader':'Tractor'} hours set to ${val} hrs.`,'success');
+}
+
+function refreshHoursDisplay() {
+  ['FL','TB'].forEach(m=>{
+    const mh = machineHours[m];
+    const el = document.getElementById('tech'+m.charAt(0)+m.slice(1).toLowerCase()+'Hours');
+    if(el) el.textContent = mh.hours!==null ? mh.hours+' hrs' : '— hrs';
+    const noteEl = document.getElementById(m.toLowerCase()+'HoursNote');
+    if(noteEl) noteEl.textContent = mh.updatedAt ? `Last set: ${mh.updatedAt}` : 'Last set: not recorded';
+  });
+  // Also update tech ids specifically
+  document.getElementById('techFlHours').textContent = machineHours.FL.hours!==null?machineHours.FL.hours+' hrs':'— hrs';
+  document.getElementById('techTbHours').textContent = machineHours.TB.hours!==null?machineHours.TB.hours+' hrs':'— hrs';
+  document.getElementById('flHoursNote').textContent = machineHours.FL.updatedAt?`Last set: ${machineHours.FL.updatedAt}`:'Last set: not recorded';
+  document.getElementById('tbHoursNote').textContent = machineHours.TB.updatedAt?`Last set: ${machineHours.TB.updatedAt}`:'Last set: not recorded';
+}
+
+/* SCHEDULE EDITOR */
+function switchSchedMachine(m, el) {
+  schedMachine = m;
+  document.querySelectorAll('.smt').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderSchedEditor();
+}
+
+function renderSchedEditor() {
+  const data = maintData[schedMachine];
+  document.getElementById('schedEditorArea').innerHTML = `
+  <div style="overflow-x:auto;">
+  <table class="sched-edit-table" id="schedTable">
+    <thead><tr>
+      <th style="min-width:220px;">Task Name</th>
+      <th style="min-width:100px;">Interval (hrs)</th>
+      <th style="min-width:120px;">Last Done (hrs)</th>
+      <th style="min-width:130px;">Calendar Interval</th>
+      <th></th>
+    </tr></thead>
+    <tbody>
+      ${data.map((row,i)=>`<tr>
+        <td><input type="text" value="${row.label}" id="se_label_${i}"></td>
+        <td><input type="number" value="${row.hrsInterval}" id="se_int_${i}" min="1"></td>
+        <td><input type="number" value="${row.lastDoneHrs}" id="se_last_${i}" min="0"></td>
+        <td><input type="text"  value="${row.calInterval||''}" id="se_cal_${i}" placeholder="e.g. annually"></td>
+        <td><button class="del-row-btn" onclick="delSchedRow(${i})">✕</button></td>
+      </tr>`).join('')}
+    </tbody>
+  </table>
+  </div>`;
+}
+
+function addSchedRow() {
+  maintData[schedMachine].push({ label:'New Task', hrsInterval:250, lastDoneHrs:0, calInterval:'' });
+  renderSchedEditor();
+}
+
+function delSchedRow(i) {
+  if(!confirm('Delete this maintenance task?')) return;
+  maintData[schedMachine].splice(i,1);
+  renderSchedEditor();
+}
+
+function saveSchedule() {
+  const data = maintData[schedMachine];
+  data.forEach((row,i)=>{
+    const labelEl = document.getElementById('se_label_'+i);
+    const intEl   = document.getElementById('se_int_'+i);
+    const lastEl  = document.getElementById('se_last_'+i);
+    const calEl   = document.getElementById('se_cal_'+i);
+    if(labelEl) row.label        = labelEl.value;
+    if(intEl)   row.hrsInterval  = parseInt(intEl.value)||row.hrsInterval;
+    if(lastEl)  row.lastDoneHrs  = parseInt(lastEl.value)||0;
+    if(calEl)   row.calInterval  = calEl.value;
+  });
+  buildDashboard();
+  buildMaintenanceTab();
+  showToast('✅ Schedule saved. Dashboard updated.','success');
+}
+
+/* ════════════════════════════════════════════════
+   TOAST
+════════════════════════════════════════════════ */
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className='toast '+type+' show';
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+/* ════════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════════ */
+buildMaintenanceTab();
+</script>
+</body>
+</html>
