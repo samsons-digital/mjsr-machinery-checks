@@ -1625,15 +1625,34 @@ function setHours(machine) {
   const input = document.getElementById('new'+machine+'Hours');
   const val   = parseFloat(input.value);
   if(isNaN(val)||val<0){ showToast('Please enter a valid hour reading.','error'); return; }
+
+  const updatedAt = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+
   machineHours[machine] = {
     hours: val,
-    updatedAt: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}),
+    updatedAt: updatedAt,
     setBy: 'SNR Tech',
   };
   input.value='';
   refreshHoursDisplay();
   buildDashboard();
-  showToast(`✅ ${machine==='FL'?'Front Loader':'Tractor'} hours set to ${val} hrs.`,'success');
+
+  // POST to Google Sheet
+  const payload = {
+    type:      'SET_HOURS',
+    machine:   machine + '-01',
+    hours:     val,
+    updatedAt: updatedAt,
+    setBy:     'SNR Tech',
+  };
+  fetch(SCRIPT_URL, {
+    method:  'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body:    JSON.stringify(payload),
+  })
+  .then(r => r.text())
+  .then(() => showToast('Hours saved to Google Sheets.', 'success'))
+  .catch(() => showToast('Hours updated locally but Sheet sync failed.', 'error'));
 }
 
 function refreshHoursDisplay() {
