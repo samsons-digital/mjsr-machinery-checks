@@ -1257,7 +1257,7 @@ var pendingApproveId = '';
 
 function openApproveConfirm(logId, name, type, days) {
   pendingApproveId = logId;
-  var approvedBy = prompt('Approving: ' + name + ' — ' + type + ' Leave (' + days + ' days).
+  var approvedBy = prompt('Approving: ' + name + ' - ' + type + ' Leave (' + days + ' days).
 
 Enter your name to confirm approval:');
   if (!approvedBy || !approvedBy.trim()) return;
@@ -1275,7 +1275,7 @@ var pendingRejectId = '';
 
 function openRejectModal(logId, name, type, days) {
   pendingRejectId = logId;
-  document.getElementById('rejectConfirmMsg').textContent = 'Rejecting: ' + name + ' — ' + type + ' Leave (' + days + ' days). The ' + days + ' day(s) will be automatically restored to their balance.';
+  document.getElementById('rejectConfirmMsg').textContent = 'Rejecting: ' + name + ' - ' + type + ' Leave (' + days + ' days). The ' + days + ' day(s) will be automatically restored to their balance.';
   document.getElementById('rejectByInp').value     = '';
   document.getElementById('rejectReasonInp').value = '';
   clearAlert('rejectModalAlert');
