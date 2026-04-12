@@ -1651,8 +1651,26 @@ function setHours(machine) {
     body:    JSON.stringify(payload),
   })
   .then(r => r.text())
-  .then(() => showToast('Hours saved to Google Sheets.', 'success'))
-  .catch(() => showToast('Hours updated locally but Sheet sync failed.', 'error'));
+  .then(txt => {
+    console.log('SET_HOURS response:', txt);
+    try {
+      const json = JSON.parse(txt);
+      if(json.status === 'ok') {
+        showToast('Hours saved to Google Sheets.', 'success');
+      } else {
+        showToast('Script error: ' + (json.message || txt), 'error');
+        alert('SET_HOURS script error:\n' + (json.message || txt));
+      }
+    } catch(e) {
+      showToast('Unexpected response — check console.', 'error');
+      alert('SET_HOURS unexpected response:\n' + txt);
+    }
+  })
+  .catch(err => {
+    console.error('SET_HOURS fetch failed:', err);
+    showToast('Fetch failed: ' + err.message, 'error');
+    alert('SET_HOURS fetch failed:\n' + err.message);
+  });
 }
 
 function refreshHoursDisplay() {
