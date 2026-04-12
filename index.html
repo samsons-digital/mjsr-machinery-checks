@@ -882,6 +882,13 @@
         <!-- HOURS EDITOR -->
         <div class="tech-tab-content active" id="tt-hours">
           <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Set the current hour meter reading for each machine. This drives all maintenance due calculations on the Dashboard.</p>
+
+          <!-- DEBUG TEST BUTTON -->
+          <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:12px;margin-bottom:16px;">
+            <div style="font-size:12px;font-weight:600;color:#856404;margin-bottom:8px;">Connection Test</div>
+            <button onclick="testConnection()" style="padding:8px 16px;background:#856404;color:#fff;border:none;border-radius:4px;font-size:12px;cursor:pointer;font-weight:600;">Test Script Connection</button>
+            <div id="testResult" style="font-size:11px;margin-top:8px;color:#856404;"></div>
+          </div>
           <div class="hours-editor">
             <div class="hours-editor-card">
               <h4 class="h4-fl">🚜 Front Loader — FL-01</h4>
@@ -1621,6 +1628,44 @@ function switchTechTab(tab, el) {
 }
 
 /* HOURS EDITOR */
+/* ════════════════════════════════════════════════
+   CONNECTION TEST
+════════════════════════════════════════════════ */
+function testConnection() {
+  const el = document.getElementById('testResult');
+  el.textContent = 'Testing...';
+
+  // Test 1: GET request
+  fetch(SCRIPT_URL)
+    .then(r => r.text())
+    .then(txt => {
+      el.innerHTML = '<strong>GET response:</strong> ' + txt.substring(0, 200);
+
+      // Test 2: POST SET_HOURS
+      const payload = {
+        type:      'SET_HOURS',
+        machine:   'FL-01',
+        hours:     999,
+        updatedAt: 'TEST',
+        setBy:     'Connection Test',
+      };
+      return fetch(SCRIPT_URL, {
+        method:  'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body:    JSON.stringify(payload),
+      });
+    })
+    .then(r => r.text())
+    .then(txt => {
+      el.innerHTML += '<br><strong>POST response:</strong> ' + txt.substring(0, 200);
+      el.style.color = '#1e8a4a';
+    })
+    .catch(err => {
+      el.innerHTML = '<strong>ERROR:</strong> ' + err.message;
+      el.style.color = '#c0392b';
+    });
+}
+
 function setHours(machine) {
   const input = document.getElementById('new'+machine+'Hours');
   const val   = parseFloat(input.value);
