@@ -1667,7 +1667,8 @@ function testConnection() {
 }
 
 function setHours(machine) {
-  const input = document.getElementById('new'+machine+'Hours');
+  const idMap = { FL: 'newFlHours', TB: 'newTbHours' };
+  const input = document.getElementById(idMap[machine]);
   const val   = parseFloat(input.value);
   if(isNaN(val)||val<0){ showToast('Please enter a valid hour reading.','error'); return; }
 
